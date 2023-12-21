@@ -21,7 +21,7 @@ router.post("/login_with_mob", async (req,res)=>{
     }
     else
     {  
-        db.query('SELECT * FROM tbl_users WHERE country_code = ? AND mobileno=?', [country_code,mobileno]
+        db.query('SELECT * FROM tbl_users WHERE country_code = ? AND mobileno=? AND status=1', [country_code,mobileno]
             , function (err, rows) {
 
                 if (err) {
@@ -67,7 +67,7 @@ router.post("/login_with_email", async (req,res)=>{
     }
     else
     {  
-        db.query('SELECT * FROM tbl_users WHERE email=?', [email]
+        db.query('SELECT * FROM tbl_users WHERE email=? AND status=1', [email]
             , function (err, rows) {
 
                 if (err) {
@@ -218,7 +218,7 @@ router.post("/get_login_details", async (req,res)=>{
 
     if(((country_code && mobileno) || (!email)) || ((email) && (!country_code && !mobileno)))
     {  
-        db.query('SELECT * FROM tbl_users WHERE (country_code = ? AND mobileno=?) OR (email= ?)', [country_code,mobileno,email]
+        db.query('SELECT * FROM tbl_users WHERE status=1 AND (country_code = ? AND mobileno=?) OR (email= ?)', [country_code,mobileno,email]
         , function (err, rows) {
               
             if (err) {
