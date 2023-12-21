@@ -49,6 +49,52 @@ router.post("/login_with_mob", async (req,res)=>{
     }
 });
 
+//Login with email
+
+router.post("/login_with_email", async (req,res)=>{
+    
+    const { email }=req.body;
+
+    
+    var status;
+    var message;
+
+    if(!email) 
+    {
+        message="Please fil in all required fields.";
+        status="error";
+        res.status(200).json({status:status,message:message,});
+    }
+    else
+    {  
+        db.query('SELECT * FROM tbl_users WHERE email=?', [email]
+            , function (err, rows) {
+
+                if (err) {
+                    db.end();
+                    message=err;
+                    status="error";
+                    res.status(200).json({status:status,message:message,});
+                }
+            
+                
+            if(rows.length > 0)
+            {   
+                message="success";
+                status="success";
+                res.status(200).json({status:status,message:message});
+                
+            }
+            else
+            {
+                message="Email not exist. Please Create your profile first.";
+                status="error";
+                res.status(200).json({status:status,message:message,});
+            }
+        });
+    }
+});
+
 //send otp
 router.post("/send_otp", async (req,res)=>{
     
