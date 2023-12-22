@@ -129,18 +129,6 @@ router.post("/check_referral", async (req,res)=>{
                 
             if(rows.length > 0)
             {   
-                db.query('SELECT * FROM tbl_users WHERE used_referral = ?)', [used_referral]
-                , function (err, rows) {
-
-                    if (err) {
-                        db.end();
-                        console.log(err);
-                        message=err;
-                        status="error";
-                        res.status(200).json({status:status,message:message,});
-                    }
-                });
-
                 if(rows.length < 3)
                 {
                     message="Valid referral code.";
