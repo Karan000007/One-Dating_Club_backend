@@ -10,17 +10,17 @@ var requestIp = require('request-ip');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, './uploads/problem_feature/');
+        cb(null, './uploads/user_photos/');
     },
     filename: function (req, file, cb) {
         //console.log(file)
-        cb(null, new Date().toISOString().replace(/:/g, '-') + "_" + file.originalname);
+        cb(null, file.fieldname + '-' + Date.now() + file.originalname.match(/\..*$/)[0]);
     }
 });
 
 const upload = multer({ storage: storage })
 
-router.post("/register", upload.single('image'), async (req, res, next) => {
+router.post("/register", upload.array('images',10), async (req, res, next) => {
     const { firstname, lastname, gender, dob,height_feet,height_inch,linkedin,
         latest_degree,study,institute,company_name,designation,interests,gender_prefrences,age_prefrences,educational_prefrences,bio,mobileno,country_code,email,used_referral}=req.body;
 
@@ -37,6 +37,8 @@ router.post("/register", upload.single('image'), async (req, res, next) => {
     }
     else
     {  
+
+        
         db.query('SELECT * FROM tbl_users WHERE email = ? OR (country_code=? AND mobileno=?)', [email,country_code,mobileno]
                     , function (err, rows) {
 
@@ -66,6 +68,26 @@ router.post("/register", upload.single('image'), async (req, res, next) => {
                             if (err) {
                                 console.log(err)
                             } else {
+                                
+                                
+                                if(req.files.length > 0)
+                                {
+                                    var last_id=data.insertId;
+
+                                    for (var i=0; i < req.files.length; i++) {
+                                        var file = req.files[i].destination+""+req.files[i].filename;
+
+                                        var sql2="INSERT INTO tbl_users_photos(user_id,image) VALUES (?,?)";
+                                        db.query(sql2,[last_id,file], function (err, data)
+                                        {
+                                            if (err) {
+                                                console.log(err)
+                                            } 
+                                        });
+
+                                    }
+                                }
+                              
                                 message="Data has been inserted successfully";
                                 status="success";
                                 res.status(200).json({status:status,message:message});
