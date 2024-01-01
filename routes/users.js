@@ -22,14 +22,14 @@ const upload = multer({ storage: storage })
 
 router.post("/register", upload.array('images',10), async (req, res, next) => {
     const { firstname, lastname, gender, dob,height_feet,height_inch,linkedin,
-        latest_degree,study,institute,company_name,designation,interests,gender_prefrences,age_prefrences,educational_prefrences,bio,mobileno,country_code,email,used_referral}=req.body;
+        latest_degree,study,institute,company_name,designation,interests,gender_prefrences,age_prefrences_min,age_prefrences_max,educational_prefrences,bio,mobileno,country_code,email,used_referral,latitude,longitude,city,country}=req.body;
 
     var ip = requestIp.getClientIp(req);
     var status;
     var message;
     
     if(!firstname || !lastname || !gender || !dob || !height_feet || !height_inch || !linkedin || !latest_degree || !study || !institute || !company_name || !designation || !interests
-        || !gender_prefrences || !age_prefrences || !educational_prefrences || !bio || !mobileno || !email || !country_code || !used_referral) 
+        || !gender_prefrences || !age_prefrences_min || !age_prefrences_max || !latitude || !longitude || !city || !country || !educational_prefrences || !bio || !mobileno || !email || !country_code || !used_referral ) 
     {
         message="Please fil in all required fields";
         status="error";
@@ -54,45 +54,95 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                         
                     if(!rows.length)
                     {    
-                        var referral=Math.random().toString(36).slice(-6);
 
-                         var sql = `INSERT INTO tbl_users (firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, designation, interests,
-                        gender_prefrences, age_prefrences, educational_prefrences, bio, country_code, mobileno, email,ip,referralCode,used_referral
-                            )
-                            VALUES
-                            (
-                                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-                            )`;
-                            db.query(sql, [firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, designation, interests,
-                            gender_prefrences, age_prefrences, educational_prefrences, bio, country_code, mobileno, email,ip,referral,used_referral], function (err, data) {
-                            if (err) {
-                                console.log(err)
-                            } else {
-                                
-                                
-                                if(req.files.length > 0)
-                                {
-                                    var last_id=data.insertId;
+                        db.query('SELECT * FROM tbl_users WHERE referralCode = ?', [used_referral]
+                            , function (err, ref_rows) {
 
-                                    for (var i=0; i < req.files.length; i++) {
-                                        var file = req.files[i].destination+""+req.files[i].filename;
-
-                                        var sql2="INSERT INTO tbl_users_photos(user_id,image) VALUES (?,?)";
-                                        db.query(sql2,[last_id,file], function (err, data)
-                                        {
-                                            if (err) {
-                                                console.log(err)
-                                            } 
-                                        });
-
-                                    }
+                                if (err) {
+                                    db.end();
+                                    console.log(err);
+                                    message=err;
+                                    status="error";
+                                    res.status(200).json({status:status,message:message,});
                                 }
-                              
-                                message="Data has been inserted successfully";
-                                status="success";
-                                res.status(200).json({status:status,message:message});
+                            
+                                
+                            if(ref_rows.length > 0)
+                            {   
+                                db.query('SELECT * FROM tbl_users WHERE used_referral = ?', [used_referral]
+                                , function (err, rows_used) {
+                
+                                        if (err) {
+                                            db.end();
+                                            console.log(err);
+                                            message=err;
+                                            status="error";
+                                            res.status(200).json({status:status,message:message,});
+                                        }
+                    
+                                    if(rows_used.length < 3)
+                                    {
+                                        
+                                        var referral=Math.random().toString(36).slice(-6);
+
+                                        var sql = `INSERT INTO tbl_users (firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, designation, interests,
+                                        gender_prefrences, age_prefrences_min,age_prefrences_max,educational_prefrences, bio, country_code, mobileno, email,ip,referralCode,used_referral,latitude,longitude,city,country
+                                            )
+                                            VALUES
+                                            (
+                                                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                                            )`;
+
+                                            
+                                            db.query(sql, [firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, designation, interests,
+                                            gender_prefrences, age_prefrences_min,age_prefrences_max, educational_prefrences, bio, country_code, mobileno, email,ip,referral,used_referral,latitude,longitude,city,country], function (err, data) {
+                                            
+                                                if (err) {
+                                                console.log(err)
+                                            } else {
+                                                
+                                                
+                                                if(req.files.length > 0)
+                                                {
+                                                    var last_id=data.insertId;
+
+                                                    for (var i=0; i < req.files.length; i++) {
+                                                        var file = req.files[i].destination+""+req.files[i].filename;
+
+                                                        var sql2="INSERT INTO tbl_users_photos(user_id,image) VALUES (?,?)";
+                                                        db.query(sql2,[last_id,file], function (err, data)
+                                                        {
+                                                            if (err) {
+                                                                console.log(err)
+                                                            } 
+                                                        });
+
+                                                    }
+                                                }
+                                            
+                                                message="Data has been inserted successfully";
+                                                status="success";
+                                                res.status(200).json({status:status,message:message});
+                                            }
+                                        });
+                                        
+                                    }
+                                    else
+                                    {
+                                        message="Referral code limits exceeded. Only 3 users can used this code";
+                                        status="error";
+                                        res.status(200).json({status:status,message:message,});
+                                    }
+                                });
+                            }
+                            else
+                            {
+                                message="Invalid referral code.";
+                                status="error";
+                                res.status(200).json({status:status,message:message,});
                             }
                         });
+                        
                     }
                     else
                     {
@@ -151,19 +201,35 @@ router.post("/check_referral", async (req,res)=>{
                 
             if(rows.length > 0)
             {   
-                if(rows.length < 3)
-                {
-                    message="Valid referral code.";
-                    status="success";
-                    res.status(200).json({status:status,message:message});
+
+                db.query('SELECT * FROM tbl_users WHERE used_referral = ?', [used_referral]
+                , function (err, rows_used) {
+
+                    if (err) {
+                        db.end();
+                        console.log(err);
+                        message=err;
+                        status="error";
+                        res.status(200).json({status:status,message:message,});
+                    }
+
+
+                    if(rows_used.length < 3)
+                    {
+                        message="Valid referral code.";
+                        status="success";
+                        res.status(200).json({status:status,message:message});
+                    
+                    }
+                    else
+                    {
+                        message="Referral code limits exceeded. Only 3 users can used this code";
+                        status="error";
+                        res.status(200).json({status:status,message:message,});
+                    }
+                });
+
                 
-                }
-                else
-                {
-                    message="Referral code limits exceeded. Only 3 users can used this code";
-                    status="error";
-                    res.status(200).json({status:status,message:message,});
-                }
             }
             else
             {

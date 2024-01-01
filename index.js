@@ -13,11 +13,11 @@ app.use(morgan("common"));
 
 const userRout = require('./routes/users');
 const Login = require('./routes/login');
-const Linkedin = require('./routes/linkedin');
+
 
 app.use('/api/Users', userRout)
 app.use('/api/Login', Login)
-app.use('/api/Linkedin', Linkedin)
+
 
 app.listen(8080, () => {
     console.log("application is running");
