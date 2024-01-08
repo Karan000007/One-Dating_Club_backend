@@ -22,13 +22,13 @@ const upload = multer({ storage: storage })
 
 router.post("/register", upload.array('images',10), async (req, res, next) => {
     const { firstname, lastname, gender, dob,height_feet,height_inch,linkedin,
-        latest_degree,study,institute,company_name,designation,interests,gender_prefrences,age_prefrences_min,age_prefrences_max,educational_prefrences,bio,mobileno,country_code,email,used_referral,latitude,longitude,city,country}=req.body;
+        latest_degree,study,institute,company_name,industry,designation,interests,gender_prefrences,age_prefrences_min,age_prefrences_max,educational_prefrences,bio,mobileno,country_code,email,used_referral,latitude,longitude,city,country}=req.body;
 
     var ip = requestIp.getClientIp(req);
     var status;
     var message;
     
-    if(!firstname || !lastname || !gender || !dob || !height_feet || !height_inch || !linkedin || !latest_degree || !study || !institute || !company_name || !designation || !interests
+    if(!firstname || !lastname || !gender || !dob || !height_feet || !height_inch || !linkedin || !latest_degree || !study || !institute || !company_name || !industry || !designation || !interests
         || !gender_prefrences || !age_prefrences_min || !age_prefrences_max || !latitude || !longitude || !city || !country || !educational_prefrences || !bio || !mobileno || !email || !country_code || !used_referral ) 
     {
         message="Please fil in all required fields";
@@ -85,16 +85,16 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                                         
                                         var referral=Math.random().toString(36).slice(-6);
 
-                                        var sql = `INSERT INTO tbl_users (firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, designation, interests,
+                                        var sql = `INSERT INTO tbl_users (firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, industry,designation, interests,
                                         gender_prefrences, age_prefrences_min,age_prefrences_max,educational_prefrences, bio, country_code, mobileno, email,ip,referralCode,used_referral,latitude,longitude,city,country
                                             )
                                             VALUES
                                             (
-                                                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                                                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                                             )`;
 
                                             
-                                            db.query(sql, [firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, designation, interests,
+                                            db.query(sql, [firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, industry,designation, interests,
                                             gender_prefrences, age_prefrences_min,age_prefrences_max, educational_prefrences, bio, country_code, mobileno, email,ip,referral,used_referral,latitude,longitude,city,country], function (err, data) {
                                             
                                                 if (err) {
@@ -146,7 +146,6 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                     }
                     else
                     {
-
                         if(rows[0].email==email)
                         {
                             message="Your email address already exist please try to login.";
@@ -241,5 +240,86 @@ router.post("/check_referral", async (req,res)=>{
     }
 });
 
+
+//check refferal code
+
+router.post("/waitlist", async (req,res)=>{
+    
+    const { email }=req.body;
+
+    
+    var status;
+    var message;
+
+    if(!email) 
+    {
+        message="Please Enter Email Address.";
+        status="error";
+        res.status(200).json({status:status,message:message,});
+    }
+    else
+    {  
+
+
+    
+
+        db.query('SELECT id,city,country FROM tbl_users WHERE email = ?', [email]
+            , function (err, rows) {
+
+                if (err) {
+                    db.end();
+                    console.log(err);
+                    message=err;
+                    status="error";
+                    res.status(200).json({status:status,message:message,});
+                }
+            
+                
+            if(rows.length > 0)
+            {   
+                var city=rows[0].city;
+                var country=rows[0].country;
+                
+                var sql="SELECT (SELECT count(id) FROM tbl_users WHERE status = 0 AND city='"+rows[0].city+"') AS total_users_in_city,\n"+
+                "(SELECT count(id) FROM tbl_users WHERE id > "+rows[0].id+" AND status =0 AND city='"+rows[0].city+"') AS you_are_in_city,\n"+
+                "(SELECT count(id) FROM tbl_users WHERE status = 0 AND country='"+rows[0].country+"')  AS total_users_in_country,\n"+
+                "(SELECT count(id) FROM tbl_users WHERE id > "+rows[0].id+" AND status =0 AND country='"+rows[0].country+"') you_are_in_country";
+                console.log('sql-----',sql)
+                db.query(sql,function(err,rows){
+                    if (err) {
+                        db.end();
+                        console.log(err);
+                        message=err;
+                        status="error";
+                        res.status(200).json({status:status,message:message,});
+                    }
+                    else
+                    {
+                        
+                        message="Data Found";
+                        status="success";
+                        res.status(200).json({status:status,message:message,
+                            total_users_in_city:rows[0].total_users_in_city,
+                            you_are_in_city:(rows[0].total_users_in_city-rows[0].you_are_in_city),
+                            total_users_in_country:(rows[0].total_users_in_country),
+                            you_are_in_country:(rows[0].total_users_in_country-rows[0].you_are_in_country),
+                            you_are_in_country:(rows[0].total_users_in_country-rows[0].you_are_in_country),
+                            city:city,
+                            country:country,
+                        });
+                    }
+
+                });
+                
+            }
+            else
+            {
+                message="You are not in waitnglist";
+                status="error";
+                res.status(200).json({status:status,message:message,});
+            }
+        });
+    }
+});
 
 module.exports=router 
