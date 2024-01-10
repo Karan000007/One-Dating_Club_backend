@@ -1,26 +1,48 @@
 const router=require("express").Router();
 var request = require('request');
 const multer = require('multer');
+const multerS3 = require("multer-s3");
 var db = require('../db');
 var requestIp = require('request-ip');
+const path = require('path'); 
 
+const { S3Client } = require('@aws-sdk/client-s3');
 
-
-//insert problem feature
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, './uploads/user_photos/');
-    },
-    filename: function (req, file, cb) {
-        //console.log(file)
-        cb(null, file.fieldname + '-' + Date.now() + file.originalname.match(/\..*$/)[0]);
+const config = {
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
     }
+}
+const s3 = new S3Client(config);
+
+const upload = multer({
+    storage: multerS3({
+        s3,
+        bucket: process.env.AWS_S3_BUCKET_NAME,
+        contentType: multerS3.AUTO_CONTENT_TYPE,
+        key: (req, file, cb) => {   
+            const fileName = `${Date.now()}_${Math.round(Math.random() * 1E9)}`;
+            cb(null, `user_photos/${fileName}${path.extname(file.originalname)}`);
+        }
+    })
 });
 
-const upload = multer({ storage: storage })
+//     AWS.config.update({
+//     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+//     region: process.env.AWS_REGION,
+//     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+//     });
 
+//   const s3 = new AWS.S3();
+
+//   const upload = multer({ dest: 'user_photos/' });
+  
 router.post("/register", upload.array('images',10), async (req, res, next) => {
+
+    
+
     const { firstname, lastname, gender, dob,height_feet,height_inch,linkedin,
         latest_degree,study,institute,company_name,industry,designation,interests,gender_prefrences,age_prefrences_min,age_prefrences_max,educational_prefrences,bio,mobileno,country_code,email,used_referral,latitude,longitude,city,country}=req.body;
 
@@ -55,9 +77,10 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                     if(!rows.length)
                     {    
 
-                        db.query('SELECT * FROM tbl_users WHERE referralCode = ?', [used_referral]
+                       var query= db.query('SELECT * FROM tbl_users WHERE referralCode = ?', [used_referral]
                             , function (err, ref_rows) {
-
+                               
+                                console.log('ref--',ref_rows.length)
                                 if (err) {
                                     db.end();
                                     console.log(err);
@@ -66,7 +89,7 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                                     res.status(200).json({status:status,message:message,});
                                 }
                             
-                                
+                              
                             if(ref_rows.length > 0)
                             {   
                                 db.query('SELECT * FROM tbl_users WHERE used_referral = ?', [used_referral]
@@ -79,7 +102,8 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                                             status="error";
                                             res.status(200).json({status:status,message:message,});
                                         }
-                    
+                                        
+                                        
                                     if(rows_used.length < 3)
                                     {
                                         
@@ -105,19 +129,28 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                                                 if(req.files.length > 0)
                                                 {
                                                     var last_id=data.insertId;
-
-                                                    for (var i=0; i < req.files.length; i++) {
-                                                        var file = req.files[i].destination+""+req.files[i].filename;
-
-                                                        var sql2="INSERT INTO tbl_users_photos(user_id,image) VALUES (?,?)";
-                                                        db.query(sql2,[last_id,file], function (err, data)
-                                                        {
-                                                            if (err) {
-                                                                console.log(err)
-                                                            } 
+                                                    try {
+                                                        const uploadPromises = req.files.map(async file => {
+                                                        
+                                                          var sql2="INSERT INTO tbl_users_photos(user_id,image) VALUES (?,?)";
+                                                          db.query(sql2,[last_id,file.location], function (err, data)
+                                                          {
+                                                              if (err) {
+                                                                  console.log(err)
+                                                              } 
+                                                          });
                                                         });
-
-                                                    }
+                                                    
+                                                        Promise.all(uploadPromises);
+                                                        
+                                                        //res.send('Files uploaded successfully');
+                                                      } catch (error) {
+                                                       
+                                                        message="Error uploading file to S3";
+                                                        status="error";
+                                                        res.status(200).json({status:status,message:error});
+                                                      }
+                                                    
                                                 }
                                             
                                                 message="Data has been inserted successfully";

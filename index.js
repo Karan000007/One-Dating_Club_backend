@@ -4,7 +4,7 @@ const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require("morgan");
 
-
+dotenv.config()
 
 app.use(express.json());
 app.use(helmet());
