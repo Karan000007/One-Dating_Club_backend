@@ -17,9 +17,8 @@ router.post("/", async (req, res, next) => {
     }
     else
     {  
-
         db.query('SELECT * FROM tbl_users WHERE id=? AND status=1', [user_id]
-            , function (err, rows) {
+            ,function (err, rows) {
                 
                 if (err) {
                     db.end();

@@ -3,6 +3,12 @@ var request = require('request');
 var db = require('../db');
 
 
+const accountSid = process.env.SMS_ACCOUNT_SID;
+const authToken = process.env.SMS_ACCOUNT_AUTH_TOKEN;
+
+const client = require('twilio')(accountSid, authToken);
+
+
 //Login with mobile
 
 router.post("/login_with_mob", async (req,res)=>{
@@ -121,6 +127,12 @@ router.post("/send_otp", async (req,res)=>{
             OTP += digits[Math.floor(Math.random() * 10)]; 
         } 
         
+        client.messages.create({
+            body: 'Dear User, Do not share it with anyone to save yourself from fraud. Your one time password '+OTP+' One Percent Dating.',
+            to: "+"+country_code+""+mobileno, // Text your number
+            from: '+13465531781', // From a valid Twilio number
+          });
+
 
         var sql="INSERT INTO tbl_otp (mobile_no,otp) VALUES (?, ?)";
         db.query(sql,[(country_code+""+mobileno),OTP] , function (err, rows) {
@@ -132,6 +144,8 @@ router.post("/send_otp", async (req,res)=>{
             }
             else
             {
+
+               
                 message="success";
                 status="success";
                 res.status(200).json({status:status,message:message,otp:OTP});
@@ -218,7 +232,7 @@ router.post("/get_login_details", async (req,res)=>{
 
     if(((country_code && mobileno) || (!email)) || ((email) && (!country_code && !mobileno)))
     {  
-        db.query('SELECT * FROM tbl_users WHERE status=1 AND (country_code = ? AND mobileno=?) OR (email= ?)', [country_code,mobileno,email]
+        db.query('SELECT u.*,IFNULL(GROUP_CONCAT(image),"") AS user_image FROM tbl_users u LEFT JOIN tbl_users_photos up ON up.user_id=u.id WHERE (country_code = ? AND mobileno=?) OR (email= ?) GROUP BY u.id ORDER BY id DESC LIMIT 1', [country_code,mobileno,email]
         , function (err, rows) {
               
             if (err) {
@@ -230,9 +244,13 @@ router.post("/get_login_details", async (req,res)=>{
             
             if(rows.length > 0)
             { 
+                
+                var spilt=rows[0].user_image.split(",");
+
                 message="success";
                 status="User found";
-                res.status(200).json({status:status,message:message,details:rows[0]});
+                res.status(200).json({status:status,message:message,details:rows[0],
+                    user_photos:spilt,});
             }
             else
             {
