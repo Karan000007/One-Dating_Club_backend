@@ -15,12 +15,15 @@ const userRout = require('./routes/users');
 const Login = require('./routes/login');
 const Matches = require('./routes/matches');
 
+const Industry = require('./routes/industry');
+
 
 
 
 app.use('/api/Users', userRout)
 app.use('/api/Login', Login)
 app.use('/api/Matches', Matches)
+app.use('/api/industry', Industry)
 
 
 app.listen(5001, () => {
