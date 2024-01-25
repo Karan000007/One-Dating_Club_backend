@@ -27,7 +27,7 @@ router.post("/login_with_mob", async (req,res)=>{
     }
     else
     {  
-        db.query('SELECT * FROM tbl_users WHERE country_code = ? AND mobileno=? AND status=1', [country_code,mobileno]
+        db.query('SELECT * FROM tbl_users WHERE country_code = ? AND mobileno=?', [country_code,mobileno]
             , function (err, rows) {
 
                 if (err) {
@@ -40,14 +40,24 @@ router.post("/login_with_mob", async (req,res)=>{
                 
             if(rows.length > 0)
             {   
-                message="success";
-                status="success";
-                res.status(200).json({status:status,message:message});
+                if(rows[0].status==1)
+                {
+                    message="success";
+                    status="success";
+                    res.status(200).json({status:status,message:message});
+                }
+                else
+                {
+                    message="Your account not approved by admin. Please try to later";
+                    status="error";
+                    res.status(200).json({status:status,message:message});
+                }
+                
                 
             }
             else
             {
-                message="Mobile number not exist. Please Create your profile first.";
+                message="Mobile number wasn't exist. Please Create your profile first.";
                 status="error";
                 res.status(200).json({status:status,message:message,});
             }
@@ -73,7 +83,7 @@ router.post("/login_with_email", async (req,res)=>{
     }
     else
     {  
-        db.query('SELECT * FROM tbl_users WHERE email=? AND status=1', [email]
+        db.query('SELECT * FROM tbl_users WHERE email=?', [email]
             , function (err, rows) {
 
                 if (err) {
@@ -86,9 +96,18 @@ router.post("/login_with_email", async (req,res)=>{
                 
             if(rows.length > 0)
             {   
-                message="success";
-                status="success";
-                res.status(200).json({status:status,message:message});
+                if(rows[0].status==1)
+                {
+                    message="success";
+                    status="success";
+                    res.status(200).json({status:status,message:message});
+                }
+                else
+                {
+                    message="Your account wasn't approved by admin. Please try to later";
+                    status="error";
+                    res.status(200).json({status:status,message:message});
+                }
                 
             }
             else
@@ -119,6 +138,7 @@ router.post("/send_otp", async (req,res)=>{
     else
     {  
 
+        
         db.query("DELETE FROM tbl_otp WHERE mobile_no = ? AND is_verified=0",[(country_code+""+mobileno)]);
 
         var digits = '0123456789'; 
