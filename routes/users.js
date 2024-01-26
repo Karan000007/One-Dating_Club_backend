@@ -5,8 +5,11 @@ const multerS3 = require("multer-s3");
 var db = require('../db');
 var requestIp = require('request-ip');
 const path = require('path'); 
-const { S3Client } = require('@aws-sdk/client-s3');
+const { S3Client  } = require('@aws-sdk/client-s3');
 const { createTransport } = require('nodemailer');
+const {Rekognition} = require('aws-sdk')
+
+const rekognition = new Rekognition({region: process.env.AWS_REGION})
 
 const config = {
     region: process.env.AWS_REGION,
@@ -35,7 +38,62 @@ const upload = multer({
         }    })
 });
 
+const nonS3Upload = multer({ storage: multer.memoryStorage() })
+
 //console.log("location",upload)
+
+//face recognization api
+router.post("/face_detect", nonS3Upload.array('images'), async (req, res, next) => {
+    
+    var status;
+    var message;
+    const response_data = [];
+
+    
+    try {
+    
+    const uploadPromises = req.files.map(file => {
+        
+        return new Promise((resolve, reject) => {
+            rekognition.detectFaces({
+                Attributes:["ALL"],
+                Image:{
+                        Bytes: file.buffer
+                    }
+                },(err,data) => {
+                    if(err)
+                    {
+                        console.log(err,err.stack);
+                        reject(err)
+                        // message=err;
+                        // status="error";
+                        // res.status(200).json({status:status,message:message,});
+                    } else {
+                        if(data.FaceDetails.length > 0){
+                            response_data.push(file.originalname)
+                            resolve(data.FaceDetails)
+                        }else {
+                            resolve(data.FaceDetails)
+                        }
+                    }
+                }
+            );
+        })
+
+       
+    });
+
+   await Promise.all(uploadPromises);
+
+    res.status(200).json({message:message,data:response_data});
+    
+    
+   } catch (error) {
+    console.log('error===',error);
+    res.status(500).json({message: error})
+   }
+});
+
 
 router.post("/register", upload.array('images',10), async (req, res, next) => {
 
