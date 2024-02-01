@@ -264,9 +264,9 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                                                           </style>
                                                        </head>
                                                        <body style="border:1px solid black;padding:5px">
-                                                       <p style="margin-left:40%;text-indent: 0pt;text-align: left;">
-                                                      
-                                                       <img width="225" style="" height="124" src="https://onepercentdating.club/logo.png"/></p>
+                                                       <center><p style="text-indent: 0pt;">
+                   
+                                                       <img width="150" style="" height="90" src="https://onepercentdating.club/logo.png"/></p></center>
                                                           <p style="text-indent: 0pt;text-align: left;"><br/></p>
                                                           <p style="text-indent: 0pt;text-align: left;"><br/></p>
                                                           <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">Dear ${firstname},</p>
@@ -534,4 +534,47 @@ router.post("/waitlist", async (req,res)=>{
     }
 });
 
+
+router.post("/check_email", async (req,res)=>{
+    
+    const { email }=req.body;
+
+    
+    var status;
+    var message;
+
+    if(!email) 
+    {
+        message="Please fil in all required fields.";
+        status="error";
+        res.status(200).json({status:status,message:message,});
+    }
+    else
+    {  
+        db.query('SELECT * FROM tbl_users WHERE email=?', [email]
+            , function (err, rows) {
+
+                if (err) {
+                    db.end();
+                    message=err;
+                    status="error";
+                    res.status(200).json({status:status,message:message,});
+                }
+            
+                
+            if(rows.length > 0)
+            {   
+                message="Email already exist. Please try to another.";
+                status="error";
+                res.status(200).json({status:status,message:message,});
+            }
+            else
+            {
+                message="Email not exist.";
+                status="success";
+                res.status(200).json({status:status,message:message,});
+            }
+        });
+    }
+});
 module.exports=router 

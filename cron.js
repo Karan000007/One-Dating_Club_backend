@@ -11,7 +11,7 @@ function run()
                 
             
     var qry='';
-    qry="SELECT u.email,u.id FROM tbl_users u INNER JOIN tbl_filterdata tf ON (tf.college=u.institute OR tf.company=u.company_name) OR (tf.college=u.institute AND tf.company=u.company_name) WHERE u.status=0";
+    qry="SELECT u.email,u.id FROM tbl_users u INNER JOIN tbl_filterdata tf ON (tf.college=u.institute OR tf.company=u.company_name OR tf.withindia=u.company_name) OR (tf.college=u.institute AND tf.company=u.company_name) OR (tf.college=u.institute AND tf.withindia=u.company_name) WHERE u.status=0";
 
 
     db.query(qry

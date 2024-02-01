@@ -138,41 +138,40 @@ router.post("/send_otp", async (req,res)=>{
     else
     {  
 
-        
-        db.query("DELETE FROM tbl_otp WHERE mobile_no = ? AND is_verified=0",[(country_code+""+mobileno)]);
+          
+            db.query("DELETE FROM tbl_otp WHERE mobile_no = ? AND is_verified=0",[(country_code+""+mobileno)]);
 
-        var digits = '0123456789'; 
-        let OTP = ''; 
-        for (let i = 0; i < 6; i++ ) { 
-            OTP += digits[Math.floor(Math.random() * 10)]; 
-        } 
-        
-        client.messages.create({
-            body: 'Dear User, Do not share it with anyone to save yourself from fraud. Your one time password '+OTP+' One Percent Dating.',
-            to: "+"+country_code+""+mobileno, // Text your number
-            from: '+13465531781', // From a valid Twilio number
-          });
+            var digits = '0123456789'; 
+            let OTP = ''; 
+            for (let i = 0; i < 6; i++ ) { 
+                OTP += digits[Math.floor(Math.random() * 10)]; 
+            } 
+            
+            client.messages.create({
+                body: "Welcome to the One Percent Dating Club, where exceptional connections await. Your personal OTP for entry is "+OTP+". Please enter this code within the next 5 minutes to confirm your identity and proceed to a world of exclusive dating experiences. We're thrilled to have you join our distinguished community.",
+                to: "+"+country_code+""+mobileno, // Text your number
+                from: '+13465531781', // From a valid Twilio number
+            });
 
 
-        var sql="INSERT INTO tbl_otp (mobile_no,otp) VALUES (?, ?)";
-        db.query(sql,[(country_code+""+mobileno),OTP] , function (err, rows) {
-            if (err) {
-                db.end();
-                message=err;
-                status="error";
-                res.status(200).json({status:status,message:message});
-            }
-            else
-            {
+            var sql="INSERT INTO tbl_otp (mobile_no,otp) VALUES (?, ?)";
+            db.query(sql,[(country_code+""+mobileno),OTP] , function (err, rows) {
+                if (err) {
+                    db.end();
+                    message=err;
+                    status="error";
+                    res.status(200).json({status:status,message:message});
+                }
+                else
+                {
 
-               
-                message="success";
-                status="success";
-                res.status(200).json({status:status,message:message,otp:OTP});
-            }
-        });
-
-        
+                
+                    message="success";
+                    status="success";
+                    res.status(200).json({status:status,message:message});
+                }
+            });
+            
     }
 });
 

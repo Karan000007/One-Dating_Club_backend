@@ -62,9 +62,9 @@ router.get("/Approve",async (req, res, next) => {
                       </style>
                    </head>
                    <body style="border:1px solid black;padding:5px">
-                    <p style="margin-left:40%;text-indent: 0pt;text-align: left;">
+                     <center><p style="text-indent: 0pt;">
                    
-                    <img width="225" style="" height="124" src="https://onepercentdating.club/logo.png"/></p>
+                      <img width="150" style="" height="90" src="https://onepercentdating.club/logo.png"/></p></center>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
                       <p style="padding-top: 6pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Subject: Exclusive Access Granted: Welcome to One Percent Dating Club</p>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
