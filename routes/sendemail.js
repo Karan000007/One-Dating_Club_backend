@@ -33,7 +33,7 @@ router.get("/Approve",async (req, res, next) => {
                 console.log(err);
                 message=err;
                 status="error";
-                res.status(200).json({status:status,message:message,});
+                res.status(200).json({status:status,message:message});
             }
             
 
@@ -61,14 +61,14 @@ router.get("/Approve",async (req, res, next) => {
                          .s2 { color: #1A61FF; font-family:Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 12pt; }
                       </style>
                    </head>
-                   <body style="border:1px solid black;padding:5px">
+                   <body style="padding:5px">
                      <center><p style="text-indent: 0pt;">
                    
                       <img width="150" style="" height="90" src="https://onepercentdating.club/logo.png"/></p></center>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
                       <p style="padding-top: 6pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Subject: Exclusive Access Granted: Welcome to One Percent Dating Club</p>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
-                      <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">Dear ${user_name},</p>
+                      <b style="padding-left: 5pt;text-indent: 0pt;text-align: left;">Dear ${user_name},</b>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
                       <p class="s1" style="padding-left: 5pt;text-indent: 0pt;text-align: left;">Celebrating Your Arrival at One Percent Dating Club</p>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
@@ -94,7 +94,7 @@ router.get("/Approve",async (req, res, next) => {
                       <p style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;line-height: 130%;text-align: left;">Welcome to an exclusive realm where being exceptional is the norm. We are excited to have you with us.</p>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
                       <br/><br/>
-                      <p style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Best Regards,</p>
+                      <b style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Best Regards,</b>
                       <p style="padding-top: 4pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">The One Percent Dating Club Team</p>
                    </body>
                 </html>`

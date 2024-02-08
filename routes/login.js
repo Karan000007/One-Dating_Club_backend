@@ -13,13 +13,13 @@ const client = require('twilio')(accountSid, authToken);
 
 router.post("/login_with_mob", async (req,res)=>{
     
-    const { country_code,mobileno }=req.body;
+    const { country_code,mobileno,api_type }=req.body;
 
     
     var status;
     var message;
 
-    if(!country_code || !mobileno) 
+    if(!country_code || !mobileno || !api_type) 
     {
         message="Please fil in all required fields.";
         status="error";
@@ -40,16 +40,25 @@ router.post("/login_with_mob", async (req,res)=>{
                 
             if(rows.length > 0)
             {   
-                if(rows[0].status==1)
+                if(api_type=='login')
                 {
-                    message="success";
-                    status="success";
-                    res.status(200).json({status:status,message:message});
+                    if(rows[0].status==1)
+                    {
+                        message="success";
+                        status="success";
+                        res.status(200).json({status:status,message:message,status_code:1});
+                    }
+                    else
+                    {
+                        message="Your account not approved by admin.";
+                        status="error";
+                        res.status(200).json({status:status,message:message,status_code:0});
+                    }
                 }
                 else
                 {
-                    message="Your account not approved by admin. Please try to later";
-                    status="error";
+                    status="success";
+                    message="Mobile number already exist";
                     res.status(200).json({status:status,message:message});
                 }
                 
@@ -69,13 +78,13 @@ router.post("/login_with_mob", async (req,res)=>{
 
 router.post("/login_with_email", async (req,res)=>{
     
-    const { email }=req.body;
+    const { email,api_type }=req.body;
 
     
     var status;
     var message;
 
-    if(!email) 
+    if(!email || !api_type) 
     {
         message="Please fil in all required fields.";
         status="error";
@@ -96,25 +105,35 @@ router.post("/login_with_email", async (req,res)=>{
                 
             if(rows.length > 0)
             {   
-                if(rows[0].status==1)
+                if(api_type=='login')
                 {
-                    message="success";
-                    status="success";
-                    res.status(200).json({status:status,message:message});
+                    if(rows[0].status==1)
+                    {
+                        message="success";
+                        status="success";
+                        
+                        res.status(200).json({status:status,message:message,status_code:1});
+                    }
+                    else
+                    {
+                        message="Your account wasn't approved by admin.";
+                        status="error";
+                        res.status(200).json({status:status,message:message,status_code:0});
+                    }
+                  
                 }
                 else
                 {
-                    message="Your account wasn't approved by admin. Please try to later";
-                    status="error";
+                    status="success";
+                    message="Email already exist";
                     res.status(200).json({status:status,message:message});
                 }
-                
             }
             else
             {
                 message="Email not exist. Please Create your profile first.";
                 status="error";
-                res.status(200).json({status:status,message:message,});
+                res.status(200).json({status:status,message:message});
             }
         });
     }

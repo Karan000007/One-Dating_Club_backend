@@ -263,29 +263,29 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                                                              .s1 { color: black; font-family:"Lucida Sans Unicode", sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 12pt; }
                                                           </style>
                                                        </head>
-                                                       <body style="border:1px solid black;padding:5px">
+                                                       <body style="padding:5px">
                                                        <center><p style="text-indent: 0pt;">
                    
                                                        <img width="150" style="" height="90" src="https://onepercentdating.club/logo.png"/></p></center>
                                                           <p style="text-indent: 0pt;text-align: left;"><br/></p>
                                                           <p style="text-indent: 0pt;text-align: left;"><br/></p>
-                                                          <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">Dear ${firstname},</p>
+                                                          <b style="padding-left: 5pt;text-indent: 0pt;text-align: left;">Dear ${firstname},</b>
                                                           <p class="s1" style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">A Heartfelt Thank You for Your Interest</p>
                                                           <p style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">We are delighted to welcome you to the One Percent Dating Club - an enclave where</p>
                                                           <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">brilliance, creativity, and ambition converge. Your support in our mission is invaluable. Our ethos is rooted in exclusivity and selectivity, creating a melting pot of intelligent, innovative, and driven individuals from a kaleidoscope of backgrounds. This is achieved through a blend of sophisticated in-app matching and curated offline group activities.</p>
-                                                          <p class="s1" style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Your Current Membership Status: Exclusive Waitlist</p>
+                                                          <b class="s1" style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Your Current Membership Status: Exclusive Waitlist</b>
                                                           <p style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">In our quest to maintain equilibrium, diversity, and a high-caliber community, your</p>
                                                           <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">application has been carefully placed on our exclusive waitlist. This is a testament to our commitment to balanced ratios, varied member backgrounds, and a controlled admissions rate - all while fostering vibrant engagement within our community.</p>
-                                                          <p class="s1" style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">The Art of Gaining Membership</p>
+                                                          <b class="s1" style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">The Art of Gaining Membership</b>
                                                           <p style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">How to ascend the waitlist? We meticulously analyze your LinkedIn profile, &#39;About Me&#39;</p>
                                                           <p style="padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">section, and photo submissions. Our algorithm is fine-tuned to consider your educational</p>
                                                           <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">background, professional achievements, industry involvement, fields of study, and personal interests. This, coupled with our human Review Team&#39;s discerning eye, ensures that every</p>
                                                           <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">profile is not only accomplished but also carries a certain a indescribable charm. Quality, taste, and a reflection of your best self are paramount in this journey.</p>
-                                                          <p class="s1" style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Our Philosophy and Your Role</p>
+                                                          <b class="s1" style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Our Philosophy and Your Role</b>
                                                           <p style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">At the heart of the One Percent Dating Club is a philosophy that intertwines fun, wit, and a refreshingly humorous approach with the pulse of our members&#39; desires. We are here not just to enhance your dating experience but to enrich your social tapestry. Your voice is our guiding star - tell us what you envision, and let us sculpt an experience that transcends the ordinary.</p>
                                                           <p style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Welcome to a realm where exclusivity is not just a word, but an experience.</p>
                                                           <br><br>
-                                                          <p style="padding-top: 3pt;padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">Warm regards,</p>
+                                                          <b style="padding-top: 3pt;padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">Warm regards,</b>
                                                           <p style="padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">The One Percent Dating Club Team</p>
                                                        </body>
                                                     </html>`
@@ -334,13 +334,13 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
             {
                 if(rows[0].email==email)
                 {
-                    message="Your email address already exist please try to login.";
+                    message="Email already exist please try to login";
                     status="error";
                     res.status(200).json({status:status,message:message,});
                 }
                 else if(rows[0].mobileno==mobileno && rows[0].country_code==country_code)
                 {
-                    message="Your mobile number already exist please try to login.";
+                    message="Mobile number already exist please try to login.";
                     status="error";
                     res.status(200).json({status:status,message:message,});
                 }
@@ -439,22 +439,37 @@ router.post("/check_referral", async (req,res)=>{
 
 router.post("/waitlist", async (req,res)=>{
     
-    const { email }=req.body;
+    const { email,country_code,mobileno }=req.body;
 
     
     var status;
     var message;
 
+    var isvalid=1;
+    var qry="SELECT id,city,country,status FROM tbl_users WHERE email = '"+email+"'";
+
     if(!email) 
     {
-        message="Please Enter Email Address.";
-        status="error";
-        res.status(200).json({status:status,message:message,});
+        if(country_code && mobileno)
+        {
+            qry="SELECT id,city,country,status FROM tbl_users WHERE (country_code = '"+country_code+"' AND mobileno='"+mobileno+"')";
+            isvalid==1; 
+        }
+        else
+        {
+            
+            isvalid=0
+            message="Please fill in all required fields";
+            status="error";
+            res.status(200).json({status:status,message:message,});
+        }
+        
     }
-    else
-    {  
 
-        db.query('SELECT id,city,country,status FROM tbl_users WHERE email = ?', [email]
+
+    if(isvalid==1) 
+    {
+        db.query(qry
             , function (err, rows) {
 
                 if (err) {
@@ -575,6 +590,112 @@ router.post("/check_email", async (req,res)=>{
                 res.status(200).json({status:status,message:message,});
             }
         });
+    }
+});
+
+router.post("/edit_profile", upload.array('images',10), async (req, res, next) => {
+
+    
+    let { user_id,firstname, lastname, gender, dob,height_feet,height_inch,linkedin,
+        latest_degree,study,institute,company_name,industry,designation,interests,gender_prefrences,age_prefrences_min,age_prefrences_max,educational_prefrences,bio,mobileno,country_code,email,latitude,longitude,city,country}=req.body;
+
+    
+    var status;
+    var message;
+    
+    if(!user_id || !firstname || !lastname || !gender || !dob || !height_feet || !height_inch || !latest_degree || !study || !institute || !company_name || !industry || !designation || !interests
+        || !gender_prefrences || !age_prefrences_min || !age_prefrences_max || !latitude || !longitude || !city || !country || !educational_prefrences || !email) 
+    {
+        message="Please fil in all required fields";
+        status="error";
+        res.status(200).json({status:status,message:message,});
+    }
+    else
+    {  
+        
+        db.query('SELECT * FROM tbl_users WHERE id=?', [user_id]
+            , function (err, rows) {
+
+                
+            if (err) {
+                db.end();
+                console.log(err);
+                message=err;
+                status="error";
+                res.status(200).json({status:status,message:message,});
+            }
+            
+               
+            if(rows.length > 0)
+            {    
+                var sql=`UPDATE tbl_users SET firstname=?,lastname=?,gender=?, dob=?, height_feet=?, height_inch=?, linkedin=?, latest_degree=?, study=?, institute=?, company_name=?, industry=?,designation=?, interests=?,
+                gender_prefrences=?, age_prefrences_min=?,age_prefrences_max=?,educational_prefrences=?, bio=?, country_code=?, mobileno=?, email=?,latitude=?,longitude=?,city=?,country=? WHERE id=?`;
+
+                    db.query(sql, [firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, industry,designation, interests,
+                        gender_prefrences, age_prefrences_min,age_prefrences_max, educational_prefrences, bio, country_code, mobileno, email,latitude,longitude,city,country,user_id], function (err, data) {
+                        
+                            if (err) {
+                            console.log(err)
+                        } else {
+                            message="Profile has been updated successfully";
+                            status="success";
+                            res.status(200).json({status:status,message:message,});
+                        }
+                    });
+            }
+            else
+            {
+                message="Something Went Wrong..!";
+                status="error";
+                res.status(200).json({status:status,message:message,});
+                
+            }
+
+    });
+        
+        
+    }
+});
+
+
+router.post("/delete_account", upload.array('images',10), async (req, res, next) => {
+
+    
+    let { user_id}=req.body;
+
+    
+    var status;
+    var message;
+    
+    if(!user_id) 
+    {
+        message="Please add userid";
+        status="error";
+        res.status(200).json({status:status,message:message,});
+    }
+    else
+    {  
+        
+        db.query('DELETE FROM tbl_users WHERE id=?', [user_id]
+            , function (err, rows) {
+
+                
+            if (err) {
+                db.end();
+                console.log(err);
+                message=err;
+                status="error";
+                res.status(200).json({status:status,message:message,});
+            }
+            
+               
+            message="Account has been deleted successfully.";
+            status="success";
+            res.status(200).json({status:status,message:message,});
+
+    });
+        
+        
     }
 });
 module.exports=router 
