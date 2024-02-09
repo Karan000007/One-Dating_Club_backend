@@ -1,8 +1,8 @@
 const router=require("express").Router();
 var request = require('request');
 var db = require('../db');
-
-
+const moment = require('moment');
+const Entry_date=moment().format("YYYY-MM-DD HH:mm:ss");
 const accountSid = process.env.SMS_ACCOUNT_SID;
 const authToken = process.env.SMS_ACCOUNT_AUTH_TOKEN;
 
@@ -173,8 +173,8 @@ router.post("/send_otp", async (req,res)=>{
             });
 
 
-            var sql="INSERT INTO tbl_otp (mobile_no,otp) VALUES (?, ?)";
-            db.query(sql,[(country_code+""+mobileno),OTP] , function (err, rows) {
+            var sql="INSERT INTO tbl_otp (mobile_no,otp,entry_date) VALUES (?, ?, ?)";
+            db.query(sql,[(country_code+""+mobileno),OTP,Entry_date] , function (err, rows) {
                 if (err) {
                     db.end();
                     message=err;

@@ -8,6 +8,7 @@ const path = require('path');
 const { S3Client  } = require('@aws-sdk/client-s3');
 const { createTransport } = require('nodemailer');
 const {Rekognition} = require('aws-sdk')
+const moment = require('moment');
 
 const rekognition = new Rekognition({region: process.env.AWS_REGION})
 
@@ -20,7 +21,7 @@ const config = {
 }
 
 //console.log('aws config ===>', config)
-
+const Entry_date=moment().format("YYYY-MM-DD HH:mm:ss");
 const s3 = new S3Client(config);
 
 const upload = multer({
@@ -184,16 +185,16 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                                     var referral=Math.random().toString(36).slice(-6);
 
                                     var sql = `INSERT INTO tbl_users (firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, industry,designation, interests,
-                                    gender_prefrences, age_prefrences_min,age_prefrences_max,educational_prefrences, bio, country_code, mobileno, email,ip,referralCode,used_referral,latitude,longitude,city,country
+                                    gender_prefrences, age_prefrences_min,age_prefrences_max,educational_prefrences, bio, country_code, mobileno, email,ip,referralCode,used_referral,latitude,longitude,city,country,entry_date
                                         )
                                         VALUES
                                         (
-                                            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                                            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?
                                         )`;
 
                                         
                                         db.query(sql, [firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, industry,designation, interests,
-                                        gender_prefrences, age_prefrences_min,age_prefrences_max, educational_prefrences, bio, country_code, mobileno, email,ip,referral,used_referral,latitude,longitude,city,country], function (err, data) {
+                                        gender_prefrences, age_prefrences_min,age_prefrences_max, educational_prefrences, bio, country_code, mobileno, email,ip,referral,used_referral,latitude,longitude,city,country,Entry_date], function (err, data) {
                                         
                                             if (err) {
                                             console.log(err)
@@ -206,8 +207,8 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                                                 try {
                                                     const uploadPromises = req.files.map(async file => {
                                                     
-                                                        var sql2="INSERT INTO tbl_users_photos(user_id,image) VALUES (?,?)";
-                                                        db.query(sql2,[last_id,file.location], function (err, data)
+                                                        var sql2="INSERT INTO tbl_users_photos(user_id,image,entry_date) VALUES (?,?,?)";
+                                                        db.query(sql2,[last_id,file.location,Entry_date], function (err, data)
                                                         {
                                                             if (err) {
                                                                 console.log(err)
