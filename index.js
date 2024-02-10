@@ -12,7 +12,17 @@ app.use(express.json());
 app.use(helmet());
 app.use(morgan("common"));
 
+// var server = https.createServer({
+//     key: fs.readFileSync("/etc/letsencrypt/live/onepercentdating.club/privkey.pem"),
+//     cert: fs.readFileSync("/etc/letsencrypt/live/onepercentdating.club/fullchain.pem"),
+//     requestCert: false,
+//     rejectUnauthorized: false
+// }, app);
 
+
+var server = http.createServer({}, app);
+
+const io = require("socket.io")(server);
 io.on("connection", (socket) => {
     console.log("User Connected", socket.id);
     
@@ -35,7 +45,7 @@ io.on("connection", (socket) => {
         socket.to(room_id).emit("typing_status", value);
     });
 });
-
+exports.io = io
 
 const userRout = require('./routes/users');
 const Login = require('./routes/login');
@@ -52,8 +62,8 @@ app.use('/api/Matches', Matches)
 app.use('/api/industry', Industry)
 app.use('/api/Sendmail', Sendmail)
 
-app.listen(5001, () => {
-    console.log("application is running");
+// app.listen(5001, () => {
+//     console.log("application is running");
     
     
     // });
@@ -61,4 +71,3 @@ app.listen(5001, () => {
 server.listen(5001)
 
     
-exports.io = io
