@@ -1,8 +1,8 @@
 const router=require("express").Router();
 var request = require('request');
 var db = require('../db');
-const moment = require('moment');
-const Entry_date=moment().format("YYYY-MM-DD HH:mm:ss");
+
+const Entry_date=new Date().toISOString()
 const accountSid = process.env.SMS_ACCOUNT_SID;
 const authToken = process.env.SMS_ACCOUNT_AUTH_TOKEN;
 
@@ -261,16 +261,24 @@ router.post("/verify_otp", async (req,res)=>{
 
 //get_login_Details
 router.post("/get_login_details", async (req,res)=>{
-    
     const { country_code,mobileno,email }=req.body;
 
-    
     var status;
     var message;
-
+    
     if(((country_code && mobileno) || (!email)) || ((email) && (!country_code && !mobileno)))
     {  
-        db.query('SELECT u.*,IFNULL(GROUP_CONCAT(image),"") AS user_image FROM tbl_users u LEFT JOIN tbl_users_photos up ON up.user_id=u.id WHERE (country_code = ? AND mobileno=?) OR (email= ?) GROUP BY u.id ORDER BY id DESC LIMIT 1', [country_code,mobileno,email]
+        var extra_sql='';
+        if(country_code && mobileno)
+        {
+            extra_sql=`(country_code = ${country_code} AND mobileno='${mobileno}')`;
+        }
+        else
+        {
+            extra_sql=`email = '${email}'`;
+        }
+        db.query(`SELECT u.*,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age FROM tbl_users u 
+        LEFT JOIN tbl_users_photos up ON up.user_id=u.id WHERE ${extra_sql} GROUP BY u.id ORDER BY id DESC LIMIT 1`
         , function (err, rows) {
               
             if (err) {
@@ -282,13 +290,67 @@ router.post("/get_login_details", async (req,res)=>{
             
             if(rows.length > 0)
             { 
-                
-                var spilt=rows[0].user_image.split(",");
+                db.query(`SELECT image,id FROM tbl_users_photos WHERE user_id=${rows[0].id}`, (err, photos) => {
+                    if (err) {
+                        db.end();
+                        message = err;
+                        status = "error";
+                        res.status(200).json({ status: status, message: message, });
+                    }
+                    
 
-                message="success";
-                status="User found";
-                res.status(200).json({status:status,message:message,details:rows[0],
-                    user_photos:spilt,});
+                    let second_image_array=[];
+                    for(let p in photos)
+                    {
+                        let image={
+                            image:photos[p]['image'],
+                            photo_id:photos[p]['id']
+                        }
+                        second_image_array.push(image);
+                    }
+                    
+                    let userInfo={
+                        id: rows[0]['id'],
+                        firstname: rows[0]['firstname'],
+                        lastname: rows[0]['lastname'],
+                        country_code: rows[0]['country_code'],
+                        mobileno: rows[0]['mobileno'],
+                        email: rows[0]['email'],
+                        gender: rows[0]['gender'],
+                        dob: rows[0]['dob'],
+                        height_feet: rows[0]['height_feet'],
+                        height_inch: rows[0]['height_inch'],
+                        linkedin: rows[0]['linkedin'],
+                        latest_degree: rows[0]['latest_degree'],
+                        study: rows[0]['study'],
+                        institute: rows[0]['institute'],
+                        company_name: rows[0]['company_name'],
+                        industry: rows[0]['industry'],
+                        designation: rows[0]['designation'],
+                        interests: rows[0]['interests'],
+                        bio: rows[0]['bio'],
+                        city: rows[0]['city'],
+                        country: rows[0]['country'],
+                        distance: rows[0]['distance_prefrences'],
+                        age: rows[0]['Age'],
+                        referralCode: rows[0]['referralCode'],
+                        gender_prefrences: rows[0]['gender_prefrences'],
+                        age_prefrences_min: rows[0]['age_prefrences_min'],
+                        age_prefrences_max: rows[0]['age_prefrences_max'],
+                        educational_prefrences: rows[0]['educational_prefrences'],
+                        used_referral: rows[0]['used_referral'],
+                        latitude: rows[0]['latitude'],
+                        longitude: rows[0]['longitude'],
+                        status: rows[0]['status'],
+                        photo: second_image_array,
+                    };
+                    message="success";
+                    status="User found";
+                    res.status(200).json({status:status,message:message,details:userInfo});
+                });
+                
+                
+                
             }
             else
             {
@@ -306,4 +368,5 @@ router.post("/get_login_details", async (req,res)=>{
         res.status(200).json({status:status,message:message,});
     }
 });
+
 module.exports=router 

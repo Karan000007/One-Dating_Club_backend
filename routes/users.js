@@ -5,10 +5,10 @@ const multerS3 = require("multer-s3");
 var db = require('../db');
 var requestIp = require('request-ip');
 const path = require('path'); 
-const { S3Client  } = require('@aws-sdk/client-s3');
+const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { createTransport } = require('nodemailer');
 const {Rekognition} = require('aws-sdk')
-const moment = require('moment');
+
 
 const rekognition = new Rekognition({region: process.env.AWS_REGION})
 
@@ -21,7 +21,7 @@ const config = {
 }
 
 //console.log('aws config ===>', config)
-const Entry_date=moment().format("YYYY-MM-DD HH:mm:ss");
+const Entry_date=new Date().toISOString();
 const s3 = new S3Client(config);
 
 const upload = multer({
@@ -594,18 +594,18 @@ router.post("/check_email", async (req,res)=>{
     }
 });
 
-router.post("/edit_profile", upload.array('images',10), async (req, res, next) => {
+router.post("/edit_profile", async (req, res, next) => {
 
     
-    let { user_id,firstname, lastname, gender, dob,height_feet,height_inch,linkedin,
-        latest_degree,study,institute,company_name,industry,designation,interests,gender_prefrences,age_prefrences_min,age_prefrences_max,educational_prefrences,bio,mobileno,country_code,email,latitude,longitude,city,country}=req.body;
+    let { user_id,height_feet,height_inch,linkedin,
+        latest_degree,study,institute,company_name,industry,designation,interests,gender_prefrences,age_prefrences_min,
+        age_prefrences_max,educational_prefrences,bio,distance,latitude,longitude}=req.body;
 
     
     var status;
     var message;
     
-    if(!user_id || !firstname || !lastname || !gender || !dob || !height_feet || !height_inch || !latest_degree || !study || !institute || !company_name || !industry || !designation || !interests
-        || !gender_prefrences || !age_prefrences_min || !age_prefrences_max || !latitude || !longitude || !city || !country || !educational_prefrences || !email) 
+    if(!user_id) 
     {
         message="Please fil in all required fields";
         status="error";
@@ -617,7 +617,6 @@ router.post("/edit_profile", upload.array('images',10), async (req, res, next) =
         db.query('SELECT * FROM tbl_users WHERE id=?', [user_id]
             , function (err, rows) {
 
-                
             if (err) {
                 db.end();
                 console.log(err);
@@ -629,11 +628,72 @@ router.post("/edit_profile", upload.array('images',10), async (req, res, next) =
                
             if(rows.length > 0)
             {    
-                var sql=`UPDATE tbl_users SET firstname=?,lastname=?,gender=?, dob=?, height_feet=?, height_inch=?, linkedin=?, latest_degree=?, study=?, institute=?, company_name=?, industry=?,designation=?, interests=?,
-                gender_prefrences=?, age_prefrences_min=?,age_prefrences_max=?,educational_prefrences=?, bio=?, country_code=?, mobileno=?, email=?,latitude=?,longitude=?,city=?,country=? WHERE id=?`;
+                var sql='';
+                if(height_feet && height_inch)
+                {
+                    sql=`UPDATE tbl_users SET height_feet='${height_feet}',height_inch='${height_inch}'`;
+                }
+                else if(linkedin)
+                {
+                    sql=`UPDATE tbl_users SET linkedin='${linkedin}'`;
+                }
+                else if(latest_degree)
+                {
+                    sql=`UPDATE tbl_users SET latest_degree='${latest_degree}'`;
+                }
+                else if(study)
+                {
+                    sql=`UPDATE tbl_users SET study='${study}'`;
+                }
+                else if(institute)
+                {
+                    sql=`UPDATE tbl_users SET institute='${institute}'`;
+                }
+                else if(company_name)
+                {
+                    sql=`UPDATE tbl_users SET company_name='${company_name}'`;
+                }
+                else if(industry)
+                {
+                    sql=`UPDATE tbl_users SET industry='${industry}'`;
+                }
+                else if(designation)
+                {
+                    sql=`UPDATE tbl_users SET designation='${designation}'`;
+                }
+                else if(interests)
+                {
+                    sql=`UPDATE tbl_users SET interests='${interests}'`;
+                }
+                else if(gender_prefrences)
+                {
+                    sql=`UPDATE tbl_users SET gender_prefrences='${gender_prefrences}'`;
+                }
+                else if(age_prefrences_min && age_prefrences_max)
+                {
+                    sql=`UPDATE tbl_users SET age_prefrences_min='${age_prefrences_min}',age_prefrences_max='${age_prefrences_max}'`;
+                }
+                else if(educational_prefrences)
+                {
+                    sql=`UPDATE tbl_users SET educational_prefrences='${educational_prefrences}'`;
+                }
+                else if(bio)
+                {
+                    sql=`UPDATE tbl_users SET bio='${bio}'`;
+                }
+                else if(distance)
+                {
+                    sql=`UPDATE tbl_users SET distance_prefrences='${distance}'`;
+                }
+                else if(latitude && longitude)
+                {
+                    sql=`UPDATE tbl_users SET latitude='${latitude}',longitude='${longitude}'`;
+                }
 
-                    db.query(sql, [firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, industry,designation, interests,
-                        gender_prefrences, age_prefrences_min,age_prefrences_max, educational_prefrences, bio, country_code, mobileno, email,latitude,longitude,city,country,user_id], function (err, data) {
+                if(sql)
+                {
+                    sql+=` WHERE id=${user_id}`;
+                    db.query(sql, function (err, data) {
                         
                             if (err) {
                             console.log(err)
@@ -643,6 +703,13 @@ router.post("/edit_profile", upload.array('images',10), async (req, res, next) =
                             res.status(200).json({status:status,message:message,});
                         }
                     });
+                }
+                else
+                {
+                    message="Something Went Wrong..!";
+                    status="error";
+                    res.status(200).json({status:status,message:message,});
+                }    
             }
             else
             {
@@ -659,7 +726,198 @@ router.post("/edit_profile", upload.array('images',10), async (req, res, next) =
 });
 
 
-router.post("/delete_account", upload.array('images',10), async (req, res, next) => {
+router.post("/edit_photo",upload.single('image'), async (req, res, next) => {
+
+    
+    let { photo_id,user_id}=req.body;
+
+    
+    var status;
+    var message;
+    
+    if(!user_id) 
+    {
+        message="Please fil in all required fields";
+        status="error";
+        res.status(200).json({status:status,message:message,});
+    }
+    else
+    {  
+        if(photo_id)
+        {   
+            db.query(`SELECT * FROM tbl_users_photos WHERE id=${photo_id}`,async function(err,row){
+                if(err)
+                {
+                    console.log(err);
+                }
+                else
+                {
+                    if(row.length > 0)
+                    {
+                        var image=row[0].image;
+                        var split=image.split("https://onepercentdating.s3.ap-south-1.amazonaws.com/");
+                        const params = {
+                            Bucket: process.env.AWS_S3_BUCKET_NAME,
+                            Key: split[1]
+                        };
+                        
+                        const command = new DeleteObjectCommand(params);
+                        await s3.send(command);
+                        db.query(`DELETE FROM tbl_users_photos WHERE id=${photo_id}`);
+                    }
+                }
+
+            });
+            
+        }
+       
+        var sql2="INSERT INTO tbl_users_photos(user_id,image,entry_date) VALUES (?,?,?)";
+        db.query(sql2,[user_id,req.file.location,Entry_date], function (err, data)
+        {
+            if (err) {
+                message=err;
+                status="error";
+                res.status(200).json({status:status,message:message,});
+            } 
+            else
+            {
+                message="Image upload successfully";
+                status="success";
+                res.status(200).json({status:status,message:message});
+            }
+        });
+        
+        
+        
+    }
+});
+
+router.post("/delete_photo",async (req, res, next) => {
+
+    
+    let { photo_id}=req.body;
+
+    
+    var status;
+    var message;
+    
+    if(!photo_id) 
+    {
+        message="Please fil in all required fields";
+        status="error";
+        res.status(200).json({status:status,message:message,});
+    }
+    else
+    {  
+           
+        db.query(`SELECT * FROM tbl_users_photos WHERE id=${photo_id}`,async function(err,row){
+            if(err)
+            {
+                message=err;
+                status="error";
+                res.status(200).json({status:status,message:message,});
+            }
+            else
+            {
+                if(row.length > 0)
+                {
+                    var image=row[0].image;
+                    var split=image.split("https://onepercentdating.s3.ap-south-1.amazonaws.com/");
+                    const params = {
+                        Bucket: process.env.AWS_S3_BUCKET_NAME,
+                        Key: split[1]
+                    };
+                    
+                    const command = new DeleteObjectCommand(params);
+                    await s3.send(command);
+                    db.query(`DELETE FROM tbl_users_photos WHERE id=${photo_id}`);
+                }
+            }
+
+        });
+        
+        message="Image has been deleted successfully";
+        status="success";
+        res.status(200).json({status:status,message:message,});
+         
+        
+        
+        
+    }
+});
+
+router.post("/delete_account", async (req, res, next) => {
+
+    
+    let { user_id,reason}=req.body;
+
+    
+    var status;
+    var message;
+    
+    if(!user_id || !reason) 
+    {
+        message="Please add userid and reason";
+        status="error";
+        res.status(200).json({status:status,message:message,});
+    }
+    else
+    {  
+        
+        db.query(`SELECT * FROM tbl_users WHERE id=?`, [user_id]
+            , function (err, rows) {
+
+            if (err) {
+                db.end();
+                console.log(err);
+                message=err;
+                status="error";
+                res.status(200).json({status:status,message:message,});
+            }
+            
+            if(rows.length > 0)
+            {
+                var ip = requestIp.getClientIp(req);
+                var sql = `INSERT INTO tbl_deleted_users_account (user_id,firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, industry,designation, interests,
+                    gender_prefrences, age_prefrences_min,age_prefrences_max,educational_prefrences, bio, country_code, mobileno, email,ip,referralCode,used_referral,latitude,longitude,city,country,entry_date,deleted_reason,reject_reason,rejected_date,distance_prefrences
+                        )
+                        VALUES
+                        (
+                            ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?
+                        )`;
+
+                        
+                        db.query(sql, [rows[0].id,rows[0].firstname, rows[0].lastname, rows[0].gender, rows[0].dob, rows[0].height_feet, rows[0].height_inch, rows[0].linkedin, rows[0].latest_degree, rows[0].study, rows[0].institute, rows[0].company_name, rows[0].industry,rows[0].designation, rows[0].interests,
+                            rows[0].gender_prefrences, rows[0].age_prefrences_min,rows[0].age_prefrences_max, rows[0].educational_prefrences, rows[0].bio, rows[0].country_code, rows[0].mobileno, rows[0].email,ip,rows[0].referralCode,rows[0].used_referral,rows[0].latitude,rows[0].longitude,rows[0].city,rows[0].country,Entry_date,reason,
+                            rows[0].reject_reason, rows[0].rejected_date, rows[0].distance_prefrences,
+                        ], function (err, data) {
+                        
+                            if (err) {
+                            console.log(err)
+                        } else {
+                                db.query(`DELETE FROM tbl_users WHERE id=${rows[0].id}`);
+                                message="Account has been deleted successfully.";
+                                status="success";
+                                res.status(200).json({status:status,message:message,});
+                        }
+
+                    });
+            }
+            else
+            {
+                message="Account not available.";
+                status="success";
+                res.status(200).json({status:status,message:message,});
+            }
+            
+
+        });
+        
+    }
+});
+
+
+router.post("/like_you", async (req, res, next) => {
 
     
     let { user_id}=req.body;
@@ -667,7 +925,7 @@ router.post("/delete_account", upload.array('images',10), async (req, res, next)
     
     var status;
     var message;
-    
+    var first_array=[];
     if(!user_id) 
     {
         message="Please add userid";
@@ -677,10 +935,11 @@ router.post("/delete_account", upload.array('images',10), async (req, res, next)
     else
     {  
         
-        db.query('DELETE FROM tbl_users WHERE id=?', [user_id]
-            , function (err, rows) {
+        db.query(`SELECT u.* FROM tbl_users u
+        INNER JOIN tbl_profile_like p ON p.profile_id=u.id
+        WHERE p.user_id=${user_id} ORDER BY p.id DESC`
+        , async (err, rows1) => {
 
-                
             if (err) {
                 db.end();
                 console.log(err);
@@ -688,15 +947,92 @@ router.post("/delete_account", upload.array('images',10), async (req, res, next)
                 status="error";
                 res.status(200).json({status:status,message:message,});
             }
-            
-               
-            message="Account has been deleted successfully.";
-            status="success";
-            res.status(200).json({status:status,message:message,});
 
-    });
+            if(rows1.length > 0)
+            {
+                
+                const secondArrResponse = await new Promise((resolve, reject) => {
+
+                    if(rows1.length > 0)
+                    {
+                        for(let index in rows1)
+                        {
+                            db.query(`SELECT image FROM tbl_users_photos WHERE user_id=${rows1[index]['id']}`, (err, photos) => {
+                                if (err) {
+                                    db.end();
+                                    message = err;
+                                    status = "error";
+                                    res.status(200).json({ status: status, message: message, });
+                                }
+                                
+
+                                let second_image_array=[];
+                                for(let p in photos)
+                                {
+                                    let image={
+                                        image:photos[p]['image']
+                                    }
+                                    second_image_array.push(image);
+                                }
+                                let userInfo = {
+                                    id: rows1[index]['id'],
+                                    firstname: rows1[index]['firstname'],
+                                    lastname: rows1[index]['lastname'],
+                                    country_code: rows1[index]['country_code'],
+                                    mobileno: rows1[index]['mobileno'],
+                                    email: rows1[index]['email'],
+                                    gender: rows1[index]['gender'],
+                                    dob: rows1[index]['dob'],
+                                    height_feet: rows1[index]['height_feet'],
+                                    height_inch: rows1[index]['height_inch'],
+                                    linkedin: rows1[index]['linkedin'],
+                                    latest_degree: rows1[index]['latest_degree'],
+                                    study: rows1[index]['study'],
+                                    institute: rows1[index]['institute'],
+                                    company_name: rows1[index]['company_name'],
+                                    industry: rows1[index]['industry'],
+                                    designation: rows1[index]['designation'],
+                                    interests: rows1[index]['interests'],
+                                    bio: rows1[index]['bio'],
+                                    city: rows1[index]['city'],
+                                    country: rows1[index]['country'],
+                                    distance: rows1[index]['distance'],
+                                    age: rows1[index]['Age'],
+                                    referralCode: rows1[index]['referralCode'],
+                                    photo: second_image_array,
+                                
+                                }
+                                
+                                first_array.push(userInfo);
+                                if(+index === rows1.length - 1) {
+                                    resolve(first_array)
+                                }
+                             
+                            });
+                        }
+                    }
+                    else
+                    {
+                        resolve([])
+                    }
+                   });
+                
+                
+                message="Data found";
+                status="success";
+                res.status(200).json({status:status,message:message,list:first_array});
+
+            }
+            else
+            {
+                message="No any person like to your profile.";
+                status="error";
+                res.status(200).json({status:status,message:message,});
+            }
+        });
         
         
     }
 });
+
 module.exports=router 

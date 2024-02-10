@@ -35,11 +35,24 @@ router.post("/", async (req, res, next) => {
                     // if(rows[0].today_matches_show == 0)
                     // {
                         var i=0;
-                        var match_sql1=`SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
-                         cos( radians( longitude) - radians(round(${rows[0].longitude},2)) ) + sin( radians(round(${rows[0].latitude},2)) ) * sin( radians(latitude) ) ) )) AS distance
-                         FROM tbl_users WHERE gender='${rows[0].gender_prefrences}' AND educational_prefrences='${rows[0].educational_prefrences}'
-                        AND TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) BETWEEN (${rows[0].age_prefrences_min} AND ${rows[0].age_prefrences_max}) AND
-                        industry='${rows[0].industry}' AND interests LIKE '%${rows[0].interests}%' AND status=1 AND id <> ${rows[0].id} ORDER BY distance LIMIT 2`;
+
+                        if(rows[0].distance_prefrences > 0)
+                        {
+                            var match_sql1=`SELECT tmp.* FROM(SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
+                            cos( radians( longitude) - radians(round(${rows[0].longitude},2)) ) + sin( radians(round(${rows[0].latitude},2)) ) * sin( radians(latitude) ) ) )) AS distance
+                            FROM tbl_users WHERE gender='${rows[0].gender_prefrences}' AND educational_prefrences='${rows[0].educational_prefrences}'
+                            AND TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) BETWEEN (${rows[0].age_prefrences_min} AND ${rows[0].age_prefrences_max}) AND
+                            industry='${rows[0].industry}' AND interests LIKE '%${rows[0].interests}%' AND status=1 AND id <> ${rows[0].id} ) AS tmp WHERE tmp.distance <= ${rows[0].distance_prefrences} ORDER BY tmp.distance LIMIT 2`;
+                        }
+                        else
+                        {
+                            var match_sql1=`SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
+                            cos( radians( longitude) - radians(round(${rows[0].longitude},2)) ) + sin( radians(round(${rows[0].latitude},2)) ) * sin( radians(latitude) ) ) )) AS distance
+                            FROM tbl_users WHERE gender='${rows[0].gender_prefrences}' AND educational_prefrences='${rows[0].educational_prefrences}'
+                            AND TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) BETWEEN (${rows[0].age_prefrences_min} AND ${rows[0].age_prefrences_max}) AND
+                            industry='${rows[0].industry}' AND interests LIKE '%${rows[0].interests}%' AND status=1 AND id <> ${rows[0].id} ORDER BY distance LIMIT 2`;
+                        }
+                        
                         
                         db.query(match_sql1, function(err,rows1){
                         
@@ -128,9 +141,19 @@ router.post("/", async (req, res, next) => {
                                 nex_matches_len=4-rows1.length;
                             }
 
-                            var match_sql2=`SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
-                            cos( radians( longitude) - radians(round(${rows[0].longitude},2)) ) + sin( radians(round(${rows[0].latitude},2)) ) * sin( radians(latitude) ) ) )) AS distance
-                             FROM tbl_users WHERE status=1 AND id <> 1 AND id <>  ${rows[0].id} ${extra_qry} ORDER BY rand(),distance ASC LIMIT ${nex_matches_len}`;
+                            if(rows[0].distance_prefrences > 0)
+                            {
+                                var match_sql2=`SELECT tmp.* FROM(SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
+                                cos( radians( longitude) - radians(round(${rows[0].longitude},2)) ) + sin( radians(round(${rows[0].latitude},2)) ) * sin( radians(latitude) ) ) )) AS distance
+                                 FROM tbl_users WHERE status=1 AND id <> 1 AND id <>  ${rows[0].id} ${extra_qry}) AS tmp WHERE tmp.distance <= ${rows[0].distance_prefrences} ORDER BY rand(),tmp.distance ASC LIMIT ${nex_matches_len}`;
+                            }
+                            else
+                            {
+                                var match_sql2=`SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
+                                cos( radians( longitude) - radians(round(${rows[0].longitude},2)) ) + sin( radians(round(${rows[0].latitude},2)) ) * sin( radians(latitude) ) ) )) AS distance
+                                 FROM tbl_users WHERE status=1 AND id <> 1 AND id <>  ${rows[0].id} ${extra_qry} ORDER BY rand(),distance ASC LIMIT ${nex_matches_len}`;
+                            }
+                           
                             db.query(match_sql2, async (err, rows2) => {
                                 if (err) {
                                     db.end();
@@ -140,68 +163,78 @@ router.post("/", async (req, res, next) => {
                                 } else {
                                 
                               const secondArrResponse = await new Promise((resolve, reject) => {
-                                for(let second_index in rows2)
-                                {
-                                    db.query(`SELECT image FROM tbl_users_photos WHERE user_id=${rows2[second_index]['id']}`, (err, photos) => {
-                                        if (err) {
-                                            db.end();
-                                            message = err;
-                                            status = "error";
-                                            res.status(200).json({ status: status, message: message, });
-                                        }
-                                        
 
-                                        let second_image_array=[];
-                                        for(let p in photos)
-                                        {
-                                            let image={
-                                                image:photos[p]['image']
+                                if(rows2.length > 0)
+                                {
+                                    for(let second_index in rows2)
+                                    {
+                                        db.query(`SELECT image FROM tbl_users_photos WHERE user_id=${rows2[second_index]['id']}`, (err, photos) => {
+                                            if (err) {
+                                                db.end();
+                                                message = err;
+                                                status = "error";
+                                                res.status(200).json({ status: status, message: message, });
                                             }
-                                            second_image_array.push(image);
-                                        }
-                                        let userInfo = {
-                                            id: rows2[second_index]['id'],
-                                            firstname: rows2[second_index]['firstname'],
-                                            lastname: rows2[second_index]['lastname'],
-                                            country_code: rows2[second_index]['country_code'],
-                                            mobileno: rows2[second_index]['mobileno'],
-                                            email: rows2[second_index]['email'],
-                                            gender: rows2[second_index]['gender'],
-                                            dob: rows2[second_index]['dob'],
-                                            height_feet: rows2[second_index]['height_feet'],
-                                            height_inch: rows2[second_index]['height_inch'],
-                                            linkedin: rows2[second_index]['linkedin'],
-                                            latest_degree: rows2[second_index]['latest_degree'],
-                                            study: rows2[second_index]['study'],
-                                            institute: rows2[second_index]['institute'],
-                                            company_name: rows2[second_index]['company_name'],
-                                            industry: rows2[second_index]['industry'],
-                                            designation: rows2[second_index]['designation'],
-                                            interests: rows2[second_index]['interests'],
-                                            bio: rows2[second_index]['bio'],
-                                            city: rows2[second_index]['city'],
-                                            country: rows2[second_index]['country'],
-                                            distance: rows2[second_index]['distance'],
-                                            age: rows2[second_index]['Age'],
-                                            referralCode: rows2[second_index]['referralCode'],
-                                            photo: second_image_array,
-                                           
-                                          }
+                                            
+
+                                            let second_image_array=[];
+                                            for(let p in photos)
+                                            {
+                                                let image={
+                                                    image:photos[p]['image']
+                                                }
+                                                second_image_array.push(image);
+                                            }
+                                            let userInfo = {
+                                                id: rows2[second_index]['id'],
+                                                firstname: rows2[second_index]['firstname'],
+                                                lastname: rows2[second_index]['lastname'],
+                                                country_code: rows2[second_index]['country_code'],
+                                                mobileno: rows2[second_index]['mobileno'],
+                                                email: rows2[second_index]['email'],
+                                                gender: rows2[second_index]['gender'],
+                                                dob: rows2[second_index]['dob'],
+                                                height_feet: rows2[second_index]['height_feet'],
+                                                height_inch: rows2[second_index]['height_inch'],
+                                                linkedin: rows2[second_index]['linkedin'],
+                                                latest_degree: rows2[second_index]['latest_degree'],
+                                                study: rows2[second_index]['study'],
+                                                institute: rows2[second_index]['institute'],
+                                                company_name: rows2[second_index]['company_name'],
+                                                industry: rows2[second_index]['industry'],
+                                                designation: rows2[second_index]['designation'],
+                                                interests: rows2[second_index]['interests'],
+                                                bio: rows2[second_index]['bio'],
+                                                city: rows2[second_index]['city'],
+                                                country: rows2[second_index]['country'],
+                                                distance: rows2[second_index]['distance'],
+                                                age: rows2[second_index]['Age'],
+                                                referralCode: rows2[second_index]['referralCode'],
+                                                photo: second_image_array,
+                                            
+                                            }
+                                            
+                                            second_array.push(userInfo);
+                                            if(+second_index === rows2.length - 1) {
+                                                resolve(second_array)
+                                            }
                                          
-                                          second_array.push(userInfo);
-                                          if(+second_index === rows2.length - 1) {
-                                              resolve(second_array)
-                                          }
-                                          
-                                    });
+                                        });
+                                    }
                                 }
-                               })
-                               
+                                else
+                                {
+                                    resolve([])
+                                }
+                               });
+                              
                                 var res_data=first_array.concat(secondArrResponse);
+                               
                                 db.query(`UPDATE tbl_users SET today_matches_show=1 WHERE id=${rows[0].id}`);
                                 message="Data Found";
                                 status="success";
                                 res.status(200).json({status:status,message:message,res_data});
+                                
                                 }
                             });
                             

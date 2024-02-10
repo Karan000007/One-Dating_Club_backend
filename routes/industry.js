@@ -17,7 +17,6 @@ router.post("/list", async (req,res)=>{
                 res.status(200).json({status:status,message:message,});
             }
             
-                
             if(rows.length > 0)
             {   
                 message="success";
