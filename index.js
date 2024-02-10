@@ -5,19 +5,6 @@ const http = require('http');
 const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require("morgan");
-const fs = require("fs");
-
-// var server = https.createServer({
-//     key: fs.readFileSync("/etc/letsencrypt/live/onepercentdating.club/privkey.pem"),
-//     cert: fs.readFileSync("/etc/letsencrypt/live/onepercentdating.club/fullchain.pem"),
-//     requestCert: false,
-//     rejectUnauthorized: false
-// }, app);
-
-var server = http.createServer({
-}, app);
-
-const io = require("socket.io")(server);
 
 dotenv.config()
 
@@ -64,9 +51,9 @@ app.use('/api/Login', Login)
 app.use('/api/Matches', Matches)
 app.use('/api/industry', Industry)
 app.use('/api/Sendmail', Sendmail)
-app.use('/api/chat', chat)
-// app.listen(5001, () => {
-    //     console.log("application is running");
+
+app.listen(5001, () => {
+    console.log("application is running");
     
     
     // });
