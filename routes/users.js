@@ -20,8 +20,6 @@ const config = {
     }
 }
 
-//console.log('aws config ===>', config)
-const Entry_date=new Date().toISOString();
 const s3 = new S3Client(config);
 
 const upload = multer({
@@ -194,7 +192,7 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
 
                                         
                                         db.query(sql, [firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study, institute, company_name, industry,designation, interests,
-                                        gender_prefrences, age_prefrences_min,age_prefrences_max, educational_prefrences, bio, country_code, mobileno, email,ip,referral,used_referral,latitude,longitude,city,country,Entry_date], function (err, data) {
+                                        gender_prefrences, age_prefrences_min,age_prefrences_max, educational_prefrences, bio, country_code, mobileno, email,ip,referral,used_referral,latitude,longitude,city,country,new Date()], function (err, data) {
                                         
                                             if (err) {
                                             console.log(err)
@@ -208,7 +206,7 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                                                     const uploadPromises = req.files.map(async file => {
                                                     
                                                         var sql2="INSERT INTO tbl_users_photos(user_id,image,entry_date) VALUES (?,?,?)";
-                                                        db.query(sql2,[last_id,file.location,Entry_date], function (err, data)
+                                                        db.query(sql2,[last_id,file.location,new Date()], function (err, data)
                                                         {
                                                             if (err) {
                                                                 console.log(err)
@@ -467,7 +465,7 @@ router.post("/waitlist", async (req,res)=>{
         
     }
 
-
+    
     if(isvalid==1) 
     {
         db.query(qry
@@ -599,7 +597,7 @@ router.post("/edit_profile", async (req, res, next) => {
     
     let { user_id,height_feet,height_inch,linkedin,
         latest_degree,study,institute,company_name,industry,designation,interests,gender_prefrences,age_prefrences_min,
-        age_prefrences_max,educational_prefrences,bio,distance,latitude,longitude}=req.body;
+        age_prefrences_max,educational_prefrences,bio,distance,latitude,longitude,city,country}=req.body;
 
     
     var status;
@@ -685,9 +683,9 @@ router.post("/edit_profile", async (req, res, next) => {
                 {
                     sql=`UPDATE tbl_users SET distance_prefrences='${distance}'`;
                 }
-                else if(latitude && longitude)
+                else if(latitude && longitude && city && country)
                 {
-                    sql=`UPDATE tbl_users SET latitude='${latitude}',longitude='${longitude}'`;
+                    sql=`UPDATE tbl_users SET latitude='${latitude}',longitude='${longitude}',city='${city}',country='${country}'`;
                 }
 
                 if(sql)
@@ -772,7 +770,7 @@ router.post("/edit_photo",upload.single('image'), async (req, res, next) => {
         }
        
         var sql2="INSERT INTO tbl_users_photos(user_id,image,entry_date) VALUES (?,?,?)";
-        db.query(sql2,[user_id,req.file.location,Entry_date], function (err, data)
+        db.query(sql2,[user_id,req.file.location,new Date()], function (err, data)
         {
             if (err) {
                 message=err;
@@ -888,7 +886,7 @@ router.post("/delete_account", async (req, res, next) => {
 
                         
                         db.query(sql, [rows[0].id,rows[0].firstname, rows[0].lastname, rows[0].gender, rows[0].dob, rows[0].height_feet, rows[0].height_inch, rows[0].linkedin, rows[0].latest_degree, rows[0].study, rows[0].institute, rows[0].company_name, rows[0].industry,rows[0].designation, rows[0].interests,
-                            rows[0].gender_prefrences, rows[0].age_prefrences_min,rows[0].age_prefrences_max, rows[0].educational_prefrences, rows[0].bio, rows[0].country_code, rows[0].mobileno, rows[0].email,ip,rows[0].referralCode,rows[0].used_referral,rows[0].latitude,rows[0].longitude,rows[0].city,rows[0].country,Entry_date,reason,
+                            rows[0].gender_prefrences, rows[0].age_prefrences_min,rows[0].age_prefrences_max, rows[0].educational_prefrences, rows[0].bio, rows[0].country_code, rows[0].mobileno, rows[0].email,ip,rows[0].referralCode,rows[0].used_referral,rows[0].latitude,rows[0].longitude,rows[0].city,rows[0].country,new Date(),reason,
                             rows[0].reject_reason, rows[0].rejected_date, rows[0].distance_prefrences,
                         ], function (err, data) {
                         
@@ -935,7 +933,7 @@ router.post("/like_you", async (req, res, next) => {
     else
     {  
         
-        db.query(`SELECT u.* FROM tbl_users u
+        db.query(`SELECT u.*,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age FROM tbl_users u
         INNER JOIN tbl_profile_like p ON p.profile_id=u.id
         WHERE p.user_id=${user_id} ORDER BY p.id DESC`
         , async (err, rows1) => {
@@ -1035,4 +1033,79 @@ router.post("/like_you", async (req, res, next) => {
     }
 });
 
+
+
+router.post("/pauseAccount", async (req, res, next) => {
+    
+    const { user_id }=req.body;
+
+    var status;
+    var message;
+ 
+    if(!user_id) 
+    {
+        message="Something went wrong..!";
+        status="error";
+        res.status(200).json({status:status,message:message,});
+    }
+    else
+    {  
+       
+        
+        var sql=`UPDATE tbl_users SET is_pause=1 WHERE id=${user_id}`;
+        db.query(sql, function (err, rows) {
+            if (err) {
+                db.end();
+                message=err;
+                status="error";
+                res.status(200).json({status:status,message:message});
+            }
+            else
+            {
+                status="success";
+                message="Account has been paused successfully";
+                res.status(200).json({status:status,message:message});
+                
+            }
+        });
+        
+    }
+});
+
+router.post("/reactive_pauseAccount", async (req, res, next) => {
+    
+    const { user_id }=req.body;
+
+    var status;
+    var message;
+ 
+    if(!user_id) 
+    {
+        message="Something went wrong..!";
+        status="error";
+        res.status(200).json({status:status,message:message,});
+    }
+    else
+    {  
+       
+        
+        var sql=`UPDATE tbl_users SET is_pause=0 WHERE id=${user_id}`;
+        db.query(sql, function (err, rows) {
+            if (err) {
+                db.end();
+                message=err;
+                status="error";
+                res.status(200).json({status:status,message:message});
+            }
+            else
+            {
+                status="success";
+                message="Account has been reactive successfully";
+                res.status(200).json({status:status,message:message});
+                
+            }
+        });
+        
+    }
+});
 module.exports=router 

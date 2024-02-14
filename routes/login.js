@@ -2,7 +2,7 @@ const router=require("express").Router();
 var request = require('request');
 var db = require('../db');
 
-const Entry_date=new Date().toISOString()
+
 const accountSid = process.env.SMS_ACCOUNT_SID;
 const authToken = process.env.SMS_ACCOUNT_AUTH_TOKEN;
 
@@ -174,7 +174,7 @@ router.post("/send_otp", async (req,res)=>{
 
 
             var sql="INSERT INTO tbl_otp (mobile_no,otp,entry_date) VALUES (?, ?, ?)";
-            db.query(sql,[(country_code+""+mobileno),OTP,Entry_date] , function (err, rows) {
+            db.query(sql,[(country_code+""+mobileno),OTP,new Date()] , function (err, rows) {
                 if (err) {
                     db.end();
                     message=err;
@@ -229,16 +229,24 @@ router.post("/verify_otp", async (req,res)=>{
                 {
                     db.query('UPDATE tbl_otp SET is_verified=1 WHERE mobile_no=?', [(country_code+""+mobileno)] 
                     ,function (err,rows){
-                        db.end();
-                        message=err;
-                        status="error";
-                        res.status(200).json({status:status,message:message,});
+                       
+                        if(err)
+                        {
+                            message=err;
+                            status="error";
+                            res.status(200).json({status:status,message:message,});
+                        }
+                        else
+                        {
+                            message="success";
+                            status="Otp has been verified";
+                            res.status(200).json({status:status,message:message});
+                        }
 
+                       
                     });
                     
-                    message="success";
-                    status="Otp has been verified";
-                    res.status(200).json({status:status,message:message});
+                    
                 }
                 else
                 {
