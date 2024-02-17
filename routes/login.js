@@ -350,6 +350,7 @@ router.post("/get_login_details", async (req,res)=>{
                         latitude: rows[0]['latitude'],
                         longitude: rows[0]['longitude'],
                         status: rows[0]['status'],
+                        chats: rows[0]['chats'],
                         photo: second_image_array,
                     };
                     message="success";

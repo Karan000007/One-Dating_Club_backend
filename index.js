@@ -30,6 +30,13 @@ io.on("connection", (socket) => {
         console.log("user disconnected");
     });
     
+    socket.on("add_to_inbox_room", (roomIds) => {
+        const rooms = roomIds.split(",");
+        rooms.forEach((room) => {
+          socket.join(room);
+        });
+      });
+    
     socket.on("add_to_room", (roomId) => {
         console.log("User Added to room", roomId);
         socket.join(roomId);
@@ -61,6 +68,7 @@ app.use('/api/Login', Login)
 app.use('/api/Matches', Matches)
 app.use('/api/industry', Industry)
 app.use('/api/Sendmail', Sendmail)
+app.use('/api/chat', chat)
 
 // app.listen(5001, () => {
 //     console.log("application is running");
