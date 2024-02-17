@@ -71,6 +71,6 @@ let my_job=cron.schedule('* * * * *', () => {
     run();
 });   
 
-// cron.schedule('0 18 * * *', () => {
-//     matches_alg_run();
-// });   
+cron.schedule('0 18 * * *', () => {
+    matches_alg_run();
+});   

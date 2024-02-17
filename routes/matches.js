@@ -32,31 +32,38 @@ router.post("/", async (req, res, next) => {
                 if(rows.length > 0)
                 {
 
-                    // if(rows[0].today_matches_show == 0)
-                    // {
+                    if(rows[0].today_matches_show == 0)
+                    {
                         var i=0;
-
+                        
+                        var genderextra_query='';
+                        if(rows[0].gender_prefrences != 'Both')
+                        {
+                            genderextra_query=` AND gender='${rows[0].gender_prefrences}'`;
+                        }
                         if(rows[0].distance_prefrences > 0)
                         {
                             var match_sql1=`SELECT tmp.* FROM(SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
                             cos( radians( longitude) - radians(round(${rows[0].longitude},2)) ) + sin( radians(round(${rows[0].latitude},2)) ) * sin( radians(latitude) ) ) )) AS distance
-                            FROM tbl_users WHERE gender='${rows[0].gender_prefrences}' AND educational_prefrences='${rows[0].educational_prefrences}'
-                            AND TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) BETWEEN (${rows[0].age_prefrences_min} AND ${rows[0].age_prefrences_max}) AND
-                            industry='${rows[0].industry}' AND interests LIKE '%${rows[0].interests}%' AND status=1 AND is_pause=0 AND id <> ${rows[0].id}
+                            FROM tbl_users WHERE (study='${rows[0].educational_prefrences}' OR industry='${rows[0].industry}' OR interests LIKE '%${rows[0].interests}%')
+                            ${genderextra_query}
+                            AND status=1 AND is_pause=0 AND id <> ${rows[0].id}
                             AND id NOT IN (SELECT profile_id FROM tbl_profile_like WHERE user_id=${rows[0].id})
                             AND id NOT IN (SELECT profile_id FROM tbl_profile_reject WHERE user_id=${rows[0].id})
-                            ) AS tmp WHERE tmp.distance <= ${rows[0].distance_prefrences} ORDER BY tmp.distance LIMIT 2`;
+                            ) AS tmp WHERE tmp.distance <= ${rows[0].distance_prefrences} 
+                            AND tmp.Age >= ${rows[0].age_prefrences_min} AND tmp.Age <= ${rows[0].age_prefrences_max} ORDER BY tmp.distance ASC LIMIT 2`;
                         }
                         else
                         {
-                            var match_sql1=`SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
+                            var match_sql1=`SELECT tmp.* FROM (SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
                             cos( radians( longitude) - radians(round(${rows[0].longitude},2)) ) + sin( radians(round(${rows[0].latitude},2)) ) * sin( radians(latitude) ) ) )) AS distance
-                            FROM tbl_users WHERE gender='${rows[0].gender_prefrences}' AND educational_prefrences='${rows[0].educational_prefrences}'
-                            AND TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) BETWEEN (${rows[0].age_prefrences_min} AND ${rows[0].age_prefrences_max}) AND
-                            industry='${rows[0].industry}' AND interests LIKE '%${rows[0].interests}%' AND status=1 AND is_pause=0 AND id <> ${rows[0].id}
+                            FROM tbl_users WHERE (study='${rows[0].educational_prefrences}' OR industry='${rows[0].industry}' OR interests LIKE '%${rows[0].interests}%')
+                            ${genderextra_query}
+                            AND status=1 AND is_pause=0 AND id <> ${rows[0].id}
                             AND id NOT IN (SELECT profile_id FROM tbl_profile_like WHERE user_id=${rows[0].id})
-                            AND id NOT IN (SELECT profile_id FROM tbl_profile_reject WHERE user_id=${rows[0].id})
-                            ORDER BY distance LIMIT 2`;
+                            AND id NOT IN (SELECT profile_id FROM tbl_profile_reject WHERE user_id=${rows[0].id}) ) AS tmp
+                            WHERE tmp.Age >= ${rows[0].age_prefrences_min} AND tmp.Age <= ${rows[0].age_prefrences_max}
+                            ORDER BY tmp.distance ASC LIMIT  2`;
                         }
                         
                        
@@ -151,21 +158,21 @@ router.post("/", async (req, res, next) => {
                             {
                                 var match_sql2=`SELECT tmp.* FROM(SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
                                 cos( radians( longitude) - radians(round(${rows[0].longitude},2)) ) + sin( radians(round(${rows[0].latitude},2)) ) * sin( radians(latitude) ) ) )) AS distance
-                                 FROM tbl_users WHERE status=1 AND is_pause=0 AND id <> 1 AND id <>  ${rows[0].id} ${extra_qry}
+                                 FROM tbl_users WHERE status=1 ${genderextra_query} AND is_pause=0 AND id <> 1 AND id <>  ${rows[0].id} ${extra_qry}
                                  AND id NOT IN (SELECT profile_id FROM tbl_profile_like WHERE user_id=${rows[0].id})
                                  AND id NOT IN (SELECT profile_id FROM tbl_profile_reject WHERE user_id=${rows[0].id})
-                                 ) AS tmp WHERE tmp.distance <= ${rows[0].distance_prefrences} ORDER BY rand(),tmp.distance ASC LIMIT ${nex_matches_len}`;
+                                 ) AS tmp WHERE tmp.distance <= ${rows[0].distance_prefrences} ORDER BY tmp.distance,rand() LIMIT ${nex_matches_len}`;
                             }
                             else
                             {
-                                var match_sql2=`SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
+                                var match_sql2=`SELECT tmp.* FROM(SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
                                 cos( radians( longitude) - radians(round(${rows[0].longitude},2)) ) + sin( radians(round(${rows[0].latitude},2)) ) * sin( radians(latitude) ) ) )) AS distance
-                                 FROM tbl_users WHERE status=1 AND is_pause=0 AND id <> 1 AND id <>  ${rows[0].id} ${extra_qry} 
+                                 FROM tbl_users WHERE status=1 ${genderextra_query} AND is_pause=0 AND id <> 1 AND id <>  ${rows[0].id} ${extra_qry} 
                                  AND id NOT IN (SELECT profile_id FROM tbl_profile_like WHERE user_id=${rows[0].id})
-                                 AND id NOT IN (SELECT profile_id FROM tbl_profile_reject WHERE user_id=${rows[0].id})
-                                 ORDER BY rand(),distance ASC LIMIT ${nex_matches_len}`;
+                                 AND id NOT IN (SELECT profile_id FROM tbl_profile_reject WHERE user_id=${rows[0].id}) ) AS tmp
+                                 ORDER BY tmp.distance,rand() LIMIT ${nex_matches_len}`;
                             }
-                           
+                            
                             db.query(match_sql2, async (err, rows2) => {
                                 if (err) {
                                     db.end();
@@ -253,13 +260,13 @@ router.post("/", async (req, res, next) => {
                             
                             
                         });
-                    // }
-                    // else
-                    // {
-                    //     message="Today's matches profile limit is over";
-                    //     status="error";
-                    //     res.status(200).json({status:status,message:message});
-                    // }
+                    }
+                    else
+                    {
+                        message="Today's matches profile limit is over";
+                        status="error";
+                        res.status(200).json({status:status,message:message});
+                    }
                 }
                 else
                 {
@@ -398,7 +405,7 @@ router.post("/matches_bychat", async (req, res, next) => {
         WHERE FIND_IN_SET(${user_id}, c.chat_participants) AND m.created_at >= DATE_ADD(CURDATE(), INTERVAL -14 DAY) ORDER BY m.id DESC LIMIT 1) AS tmp
         INNER JOIN tbl_users u ON u.id=tmp.profile_id WHERE u.status=1 AND u.is_pause=0 ORDER BY chat_days ASC`;
 
-        console.log(sql);
+        
         db.query(sql, function (err, rows1) {
             if (err) {
                 db.end();
@@ -410,9 +417,10 @@ router.post("/matches_bychat", async (req, res, next) => {
             if(rows1.length > 0)
             {
 
+                var fix_chat_days=14;
                 for(let index in rows1)
                 {
-                    
+                   
                     let userInfo = {
                         id: rows1[index]['id'],
                         firstname: rows1[index]['firstname'],
@@ -433,7 +441,7 @@ router.post("/matches_bychat", async (req, res, next) => {
                         interests: rows1[index]['interests'],
                         bio: rows1[index]['bio'],
                         photo: rows1[index]['image'],
-                        days_left: rows1[index]['chat_days'],
+                        days_left: (fix_chat_days-rows1[index]['chat_days']),
                     }
                         
                    first_array.push(userInfo);

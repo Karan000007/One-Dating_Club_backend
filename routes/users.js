@@ -934,8 +934,8 @@ router.post("/like_you", async (req, res, next) => {
     {  
         
         db.query(`SELECT u.*,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age FROM tbl_users u
-        INNER JOIN tbl_profile_like p ON p.profile_id=u.id
-        WHERE p.user_id=${user_id} ORDER BY p.id DESC`
+        INNER JOIN tbl_profile_like p ON p.user_id=u.id
+        WHERE p.profile_id=${user_id} ORDER BY p.id DESC`
         , async (err, rows1) => {
 
             if (err) {
