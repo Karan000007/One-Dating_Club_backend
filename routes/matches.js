@@ -11,6 +11,7 @@ router.post("/", async (req, res, next) => {
     var message;
     let first_array=[];
     let second_array=[];
+    var matches_user=[];
     if(!user_id) 
     {
         message="Something went wrong..!";
@@ -29,7 +30,7 @@ router.post("/", async (req, res, next) => {
                     res.status(200).json({status:status,message:message,});
                 }
 
-                if(rows.length > 0)
+                if(rows?.length > 0)
                 {
 
                     if(rows[0].today_matches_show == 0)
@@ -137,6 +138,7 @@ router.post("/", async (req, res, next) => {
                                             }
                                             
                                             first_array.push(userInfo);
+                                            matches_user.push(rows1[index]['id']);
                                     });
                                 } 
 
@@ -183,7 +185,7 @@ router.post("/", async (req, res, next) => {
                                 
                               const secondArrResponse = await new Promise((resolve, reject) => {
 
-                                if(rows2.length > 0)
+                                if(rows2?.length > 0)
                                 {
                                     for(let second_index in rows2)
                                     {
@@ -233,6 +235,8 @@ router.post("/", async (req, res, next) => {
                                             
                                             }
                                             
+                                            matches_user.push(rows2[second_index]['id']);
+
                                             second_array.push(userInfo);
                                             if(+second_index === rows2.length - 1) {
                                                 resolve(second_array)
@@ -248,8 +252,9 @@ router.post("/", async (req, res, next) => {
                                });
                               
                                 var res_data=first_array.concat(secondArrResponse);
-                               
-                                db.query(`UPDATE tbl_users SET today_matches_show=1 WHERE id=${rows[0].id}`);
+                                
+                                var today_matches=matches_user.join(",");
+                                db.query(`UPDATE tbl_users SET today_matches_show=1,today_matches_profile='${today_matches}' WHERE id=${rows[0].id}`);
                                 message="Data Found";
                                 status="success";
                                 res.status(200).json({status:status,message:message,res_data});
@@ -263,9 +268,98 @@ router.post("/", async (req, res, next) => {
                     }
                     else
                     {
-                        message="Today's matches profile limit is over";
-                        status="error";
-                        res.status(200).json({status:status,message:message});
+                        var match_sql1=`SELECT tmp.* FROM(SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
+                        cos( radians( longitude) - radians(round(${rows[0].longitude},2)) ) + sin( radians(round(${rows[0].latitude},2)) ) * sin( radians(latitude) ) ) )) AS distance
+                            FROM tbl_users WHERE status=1 AND FIND_IN_SET(id,'${rows[0].today_matches_profile}') 
+                            AND id NOT IN (SELECT profile_id FROM tbl_profile_like WHERE user_id=${rows[0].id})
+                            AND id NOT IN (SELECT profile_id FROM tbl_profile_reject WHERE user_id=${rows[0].id}) ) AS tmp
+                            ORDER BY tmp.distance`;
+
+                            
+                            db.query(match_sql1, async(err,rows1) => {
+                        
+                                if (err) {
+                                    db.end();
+                                    message=err;
+                                    status="error";
+                                    res.status(200).json({status:status,message:message,});
+                                }
+                                
+                                if(rows1?.length > 0)
+                                {
+                                    const resultArrResponse = await new Promise((resolve, reject) => {
+
+                                    for(let index in rows1)
+                                    {
+                                        
+                                        db.query(`SELECT image FROM tbl_users_photos WHERE user_id=${rows1[index]['id']}`, (err, photos, fields) => {
+                                            if (err) {
+                                                db.end();
+                                                message = err;
+                                                status = "error";
+                                                res.status(200).json({ status: status, message: message, });
+                                            }
+    
+                                            let image_array=[];
+                                            for(var p in photos)
+                                            {
+                                                let image={
+                                                    image:photos[p]['image']
+                                                }
+                                                image_array.push(image);
+                                            }
+    
+                                            let userInfo = {
+                                                id: rows1[index]['id'],
+                                                firstname: rows1[index]['firstname'],
+                                                lastname: rows1[index]['lastname'],
+                                                country_code: rows1[index]['country_code'],
+                                                mobileno: rows1[index]['mobileno'],
+                                                email: rows1[index]['email'],
+                                                gender: rows1[index]['gender'],
+                                                dob: rows1[index]['dob'],
+                                                height_feet: rows1[index]['height_feet'],
+                                                height_inch: rows1[index]['height_inch'],
+                                                linkedin: rows1[index]['linkedin'],
+                                                latest_degree: rows1[index]['latest_degree'],
+                                                study: rows1[index]['study'],
+                                                institute: rows1[index]['institute'],
+                                                company_name: rows1[index]['company_name'],
+                                                industry: rows1[index]['industry'],
+                                                designation: rows1[index]['designation'],
+                                                interests: rows1[index]['interests'],
+                                                bio: rows1[index]['bio'],
+                                                city: rows1[index]['city'],
+                                                country: rows1[index]['country'],
+                                                distance: rows1[index]['distance'],
+                                                age: rows1[index]['Age'],
+                                                referralCode: rows1[index]['referralCode'],
+                                                photo: image_array,
+                                                }
+                                                
+                                                first_array.push(userInfo);
+
+                                                if(+index === rows1.length - 1) {
+                                                    resolve(first_array)
+                                                }
+                                                
+                                                
+                                        });
+                                    } 
+                                    });
+
+                                    message="Data Found";
+                                    status="success";
+                                    res.status(200).json({status:status,message:message,res_data:resultArrResponse});
+                                }
+                                else
+                                {
+                                    message="Today's matches profile limit is over";
+                                    status="error";
+                                    res.status(200).json({status:status,message:message});
+                                }
+                                });
+                        
                     }
                 }
                 else
@@ -402,8 +496,11 @@ router.post("/matches_bychat", async (req, res, next) => {
         (SELECT replace(replace(c.chat_participants,'${user_id}',''),',','') AS profile_id,DATEDIFF(CURRENT_DATE(), m.created_at) AS chat_days
         FROM chat c
         INNER JOIN message m ON m.chat_id = c.id
-        WHERE FIND_IN_SET(${user_id}, c.chat_participants) AND m.created_at >= DATE_ADD(CURDATE(), INTERVAL -14 DAY) ORDER BY m.id DESC LIMIT 1) AS tmp
-        INNER JOIN tbl_users u ON u.id=tmp.profile_id WHERE u.status=1 AND u.is_pause=0 ORDER BY chat_days ASC`;
+        WHERE 
+        FIND_IN_SET(${user_id}, c.chat_participants) AND m.created_at >= DATE_ADD(CURDATE(), INTERVAL -14 DAY) ORDER BY m.id DESC LIMIT 1) AS tmp
+        INNER JOIN tbl_users u ON u.id=tmp.profile_id WHERE 
+        u.id NOT IN (SELECT profile_id FROM tbl_profile_block WHERE user_id=${user_id}) AND
+        u.status=1 AND u.is_pause=0 ORDER BY chat_days ASC`;
 
         
         db.query(sql, function (err, rows1) {
@@ -465,4 +562,102 @@ router.post("/matches_bychat", async (req, res, next) => {
 });
 
 
+router.post("/block", async (req, res, next) => {
+    
+    const { user_id,profile_id,reason }=req.body;
+
+    var status;
+    var message;
+ 
+    if(!user_id || !profile_id) 
+    {
+        message="Something went wrong..!";
+        status="error";
+        res.status(200).json({status:status,message:message,});
+    }
+    else
+    {  
+       
+        db.query("DELETE FROM tbl_profile_block WHERE user_id = ? AND profile_id=?",[user_id,profile_id]);
+
+        var sql="INSERT INTO tbl_profile_block (user_id,profile_id,reason,entry_date) VALUES (?, ?, ?, ?)";
+        db.query(sql,[user_id,profile_id,reason,Entry_date] , function (err, rows) {
+            if (err) {
+                db.end();
+                message=err;
+                status="error";
+                res.status(200).json({status:status,message:message});
+            }
+            else
+            {
+                var sql="SELECT * FROM tbl_profile_block WHERE user_id=? AND profile_id=?";
+                db.query(sql,[profile_id,user_id] , function (err, rows) {
+
+                    if (err) {
+                        db.end();
+                        message=err;
+                        status="error";
+                        res.status(200).json({status:status,message:message});
+                    }
+                    else
+                    {
+                        message="success";
+                        status="Profile has been blocked successfully";
+                        res.status(200).json({status:status,message:message});
+                        
+                    }
+
+                    
+                });
+
+                
+            }
+        });
+        
+    }
+});
+
+
+router.post("/expire", async (req, res, next) => {
+    
+    const { chat_id,user_id,profile_id,reason }=req.body;
+
+    var status;
+    var message;
+ 
+    if(!chat_id) 
+    {
+        message="Something went wrong..!";
+        status="error";
+        res.status(200).json({status:status,message:message,});
+    }
+    else
+    {  
+       
+        db.query("DELETE FROM message WHERE chat_id = ?",[chat_id]);
+
+        db.query("DELETE FROM chat WHERE id = ?",[chat_id]);
+
+        if(reason)
+        {
+            var sql="INSERT INTO tbl_chat_expire (user_id,profile_id,reason,entry_date) VALUES (?, ?, ?, ?)";
+            db.query(sql,[user_id,profile_id,reason,Entry_date] , function (err, rows) {
+                if (err) {
+                    db.end();
+                    message=err;
+                    status="error";
+                    res.status(200).json({status:status,message:message});
+                }
+            
+            });
+        }
+        
+        
+
+        message="success";
+        status="Chat has been expired successfully";
+        res.status(200).json({status:status,message:message});
+       
+    }
+});
 module.exports=router 

@@ -63,7 +63,7 @@ function run()
 
 function matches_alg_run() 
 {
-    db.query("UPDATE tbl_users SET today_matches_show=0");
+    db.query("UPDATE tbl_users SET today_matches_show=0,today_matches_profile=''");
     
 }
 

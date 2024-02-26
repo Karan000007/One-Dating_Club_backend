@@ -3,7 +3,8 @@ var connection = mysql.createConnection({
     host     : 'localhost',
     user     : 'root',
     password : '',
-    database : 'onedatingclub'
+    database : 'onedatingclub',
+    charset : 'utf8mb4'
 });
 
 connection.connect(function(err) {

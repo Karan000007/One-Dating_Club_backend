@@ -285,7 +285,7 @@ router.post("/get_login_details", async (req,res)=>{
         {
             extra_sql=`email = '${email}'`;
         }
-        db.query(`SELECT u.*,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age FROM tbl_users u 
+        db.query(`SELECT u.*,IFNULL(u.chats,'') AS chat,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age FROM tbl_users u 
         LEFT JOIN tbl_users_photos up ON up.user_id=u.id WHERE ${extra_sql} GROUP BY u.id ORDER BY id DESC LIMIT 1`
         , function (err, rows) {
               
@@ -350,7 +350,7 @@ router.post("/get_login_details", async (req,res)=>{
                         latitude: rows[0]['latitude'],
                         longitude: rows[0]['longitude'],
                         status: rows[0]['status'],
-                        chats: rows[0]['chats'],
+                        chats: rows[0]['chat'],
                         photo: second_image_array,
                     };
                     message="success";
