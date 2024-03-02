@@ -1,6 +1,48 @@
 const cron = require('node-cron');
 var db = require('./db');
 const { createTransport } = require('nodemailer');
+const axios = require('axios');
+
+
+var sendNotification = function (data) {
+    var headers = {
+        "Content-Type": "application/json; charset=utf-8",
+        "Authorization": "Basic YjhiZGQ4ZWYtNDQ0MC00MDg5LWEyMTMtMTVmZGNjOGI0Mjdl"
+    };
+
+    var options = {
+        host: "onesignal.com",
+        port: 443,
+        path: "/api/v1/notifications",
+        method: "POST",
+        headers: headers
+    };
+
+    var https = require('https');
+    var req = https.request(options, function (res) {
+        res.on('data', function (data) {
+            //console.log("Response:");
+            //console.log(JSON.parse(data));
+        });
+    });
+
+    req.on('error', function (e) {
+        console.log("ERROR:");
+        console.log(e);
+    });
+
+    req.write(JSON.stringify(data));
+    req.end();
+};
+
+var message = {
+    app_id: "5039ccac-714d-4484-8958-70df23464b8f",
+    contents: {"en": "New matches await! Open One% Dating Club to discover who's ready to connect with you today."},
+    included_segments: [ "All"],
+    
+}
+
+    
 
 
 function run() 
@@ -61,9 +103,10 @@ function run()
 }
 
 
-function matches_alg_run() 
+async function matches_alg_run() 
 {
     db.query("UPDATE tbl_users SET today_matches_show=0,today_matches_profile=''");
+    sendNotification(message);
     
 }
 
@@ -74,3 +117,5 @@ let my_job=cron.schedule('* * * * *', () => {
 cron.schedule('0 18 * * *', () => {
     matches_alg_run();
 });   
+
+

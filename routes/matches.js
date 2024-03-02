@@ -40,7 +40,7 @@ router.post("/", async (req, res, next) => {
                         var genderextra_query='';
                         if(rows[0].gender_prefrences != 'Both')
                         {
-                            genderextra_query=` AND gender_prefrences='${rows[0].gender_prefrences}' AND gender='${rows[0].gender_prefrences}'`;
+                            genderextra_query=` AND gender_prefrences='${rows[0].gender}' AND gender='${rows[0].gender_prefrences}'`;
                         }
                         if(rows[0].distance_prefrences > 0)
                         {
