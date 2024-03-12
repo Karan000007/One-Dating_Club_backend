@@ -105,7 +105,7 @@ function run()
 
 async function matches_alg_run() 
 {
-    db.query("UPDATE tbl_users SET today_matches_show=0,today_matches_profile=''");
+    db.query("UPDATE tbl_users SET today_matches_show=0,today_matches_profile='' WHERE entry_date < NOW()");
     sendNotification(message);
     
 }

@@ -31,14 +31,18 @@ io.on("connection", (socket) => {
     });
     
     socket.on("add_to_inbox_room", (roomIds) => {
-        const rooms = roomIds.split(",");
+//console.log('roomIds',roomIds);
+        const rooms = roomIds.toString().split(",");
+
         rooms.forEach((room) => {
+//console.log('room',typeof room);
           socket.join(room);
+
         });
       });
     
     socket.on("add_to_room", (roomId) => {
-        console.log("User Added to room", roomId);
+        //console.log("User Added to room", roomId);
         socket.join(roomId);
     });
     
@@ -52,6 +56,7 @@ io.on("connection", (socket) => {
         socket.to(room_id).emit("typing_status", value);
     });
 });
+
 exports.io = io
 
 const userRout = require('./routes/users');

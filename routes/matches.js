@@ -46,7 +46,7 @@ router.post("/", async (req, res, next) => {
                         {
                             var match_sql1=`SELECT tmp.* FROM(SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
                             cos( radians( longitude) - radians(round(${rows[0].longitude},2)) ) + sin( radians(round(${rows[0].latitude},2)) ) * sin( radians(latitude) ) ) )) AS distance
-                            FROM tbl_users WHERE (study='${rows[0].educational_prefrences}' OR industry='${rows[0].industry}' OR interests LIKE '%${rows[0].interests}%')
+                            FROM tbl_users WHERE (study_main_cat='${rows[0].study_main_cat}' OR industry_main_cat='${rows[0].industry_main_cat}' OR interests LIKE '%${rows[0].interests}%')
                             ${genderextra_query}
                             AND status=1 AND is_pause=0 AND id <> ${rows[0].id}
                             AND id NOT IN (SELECT profile_id FROM tbl_profile_like WHERE user_id=${rows[0].id})
@@ -58,7 +58,7 @@ router.post("/", async (req, res, next) => {
                         {
                             var match_sql1=`SELECT tmp.* FROM (SELECT *,TIMESTAMPDIFF(YEAR, str_to_date(dob, '%d/%m/%Y'), CURDATE()) AS Age,round(( 6371 * acos( cos( radians(round(${rows[0].latitude},2)) ) * cos( radians( latitude) ) *
                             cos( radians( longitude) - radians(round(${rows[0].longitude},2)) ) + sin( radians(round(${rows[0].latitude},2)) ) * sin( radians(latitude) ) ) )) AS distance
-                            FROM tbl_users WHERE (study='${rows[0].educational_prefrences}' OR industry='${rows[0].industry}' OR interests LIKE '%${rows[0].interests}%')
+                            FROM tbl_users WHERE (study_main_cat='${rows[0].study_main_cat}' OR industry_main_cat='${rows[0].industry_main_cat}' OR interests LIKE '%${rows[0].interests}%')
                             ${genderextra_query}
                             AND status=1 AND is_pause=0 AND id <> ${rows[0].id}
                             AND id NOT IN (SELECT profile_id FROM tbl_profile_like WHERE user_id=${rows[0].id})
@@ -66,6 +66,7 @@ router.post("/", async (req, res, next) => {
                             WHERE tmp.Age >= ${rows[0].age_prefrences_min} AND tmp.Age <= ${rows[0].age_prefrences_max}
                             ORDER BY tmp.distance ASC LIMIT  2`;
                         }
+                        
                         
                        
                         db.query(match_sql1, function(err,rows1){
@@ -490,20 +491,20 @@ router.post("/matches_bychat", async (req, res, next) => {
     else
     {  
        
-        var sql=`SELECT u.*,tmp.*,(SELECT image FROM tbl_users_photos WHERE user_id=u.id ORDER BY id LIMIT 1) AS image,
+        var sql=`SELECT u.*,tmp.*,
         TIMESTAMPDIFF(YEAR, str_to_date(u.dob, '%d/%m/%Y'), CURDATE()) AS Age
         FROM
-        (SELECT replace(replace(c.chat_participants,'${user_id}',''),',','') AS profile_id,DATEDIFF(CURRENT_DATE(), m.created_at) AS chat_days
+        (SELECT replace(replace(c.chat_participants,'${user_id}',''),',','') AS profile_id,IFNULL(DATEDIFF(CURRENT_DATE(), m.created_at),DATEDIFF(CURRENT_DATE(), c.created_at)) AS chat_days
         FROM chat c
-        INNER JOIN message m ON m.chat_id = c.id
+        LEFT JOIN message m ON m.chat_id = c.id
         WHERE 
-        FIND_IN_SET(${user_id}, c.chat_participants) AND m.created_at >= DATE_ADD(CURDATE(), INTERVAL -14 DAY) ORDER BY m.id DESC LIMIT 1) AS tmp
-        INNER JOIN tbl_users u ON u.id=tmp.profile_id WHERE 
+        FIND_IN_SET(${user_id}, c.chat_participants) ORDER BY m.id DESC LIMIT 1) AS tmp
+        INNER JOIN tbl_users u ON u.id=tmp.profile_id WHERE tmp.chat_days <= 14 AND
         u.id NOT IN (SELECT profile_id FROM tbl_profile_block WHERE user_id=${user_id}) AND
         u.status=1 AND u.is_pause=0 ORDER BY chat_days ASC`;
 
         
-        db.query(sql, function (err, rows1) {
+        db.query(sql, async (err, rows1) => {
             if (err) {
                 db.end();
                 message=err;
@@ -513,37 +514,69 @@ router.post("/matches_bychat", async (req, res, next) => {
             
             if(rows1.length > 0)
             {
-
-                var fix_chat_days=14;
-                for(let index in rows1)
-                {
-                   
-                    let userInfo = {
-                        id: rows1[index]['id'],
-                        firstname: rows1[index]['firstname'],
-                        lastname: rows1[index]['lastname'],
-                        age: rows1[index]['Age'],
-                        city: rows1[index]['city'],
-                        country: rows1[index]['country'],
-                        email: rows1[index]['email'],
-                        gender: rows1[index]['gender'],
-                        height_feet: rows1[index]['height_feet'],
-                        height_inch: rows1[index]['height_inch'],
-                        latest_degree: rows1[index]['latest_degree'],
-                        study: rows1[index]['study'],
-                        institute: rows1[index]['institute'],
-                        company_name: rows1[index]['company_name'],
-                        industry: rows1[index]['industry'],
-                        designation: rows1[index]['designation'],
-                        interests: rows1[index]['interests'],
-                        bio: rows1[index]['bio'],
-                        photo: rows1[index]['image'],
-                        days_left: (fix_chat_days-rows1[index]['chat_days']),
-                    }
+                const secondArrResponse = await new Promise((resolve, reject) => {
+                    if(rows1?.length > 0)
+                    {
+                        var fix_chat_days=14;
+                        for(let index in rows1)
+                        {
                         
-                   first_array.push(userInfo);
-                } 
+                            db.query(`SELECT image FROM tbl_users_photos WHERE user_id=${rows1[index]['id']}`, (err, photos, fields) => {
+                                if (err) {
+                                    db.end();
+                                    message = err;
+                                    status = "error";
+                                    res.status(200).json({ status: status, message: message, });
+                                }
 
+                                let image_array=[];
+                                for(var p in photos)
+                                {
+                                    let image={
+                                        image:photos[p]['image']
+                                    }
+                                    image_array.push(image);
+                                }
+
+                                let userInfo = {
+                                    id: rows1[index]['id'],
+                                    firstname: rows1[index]['firstname'],
+                                    lastname: rows1[index]['lastname'],
+                                    age: rows1[index]['Age'],
+                                    city: rows1[index]['city'],
+                                    country: rows1[index]['country'],
+                                    email: rows1[index]['email'],
+                                    gender: rows1[index]['gender'],
+                                    height_feet: rows1[index]['height_feet'],
+                                    height_inch: rows1[index]['height_inch'],
+                                    latest_degree: rows1[index]['latest_degree'],
+                                    study: rows1[index]['study'],
+                                    institute: rows1[index]['institute'],
+                                    company_name: rows1[index]['company_name'],
+                                    industry: rows1[index]['industry'],
+                                    designation: rows1[index]['designation'],
+                                    interests: rows1[index]['interests'],
+                                    bio: rows1[index]['bio'],
+                                    photo: image_array,
+                                    linkedin: rows1[index]['linkedin'],
+                                    referralCode: rows1[index]['referralCode'],
+                                    days_left: (fix_chat_days-rows1[index]['chat_days']),
+                                }
+
+                                first_array.push(userInfo);
+
+                                if(+index === rows1.length - 1) {
+                                    resolve(first_array)
+                                }
+                            });
+
+                        } 
+                    }
+                    else
+                    {
+                        resolve([])
+                    }
+                });
                 status="success";
                 message="Data found";
                 res.status(200).json({status:status,message:message,res_data:first_array});

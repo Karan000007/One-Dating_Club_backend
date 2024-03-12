@@ -49,7 +49,7 @@ router.get("/Approve",async (req, res, next) => {
             var mailOptions = {
                 from: rows[0].from_detail,
                 to: to_email,
-                subject: `Account Approved By OnePercent Dating Club`,
+                subject: `Exclusive Access Granted: Welcome to One Percent Dating Club`,
                 html: `<!DOCTYPE  html >
                 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
                    <head>
@@ -61,32 +61,35 @@ router.get("/Approve",async (req, res, next) => {
                          .s2 { color: #1A61FF; font-family:Arial, sans-serif; font-style: normal; font-weight: normal; text-decoration: none; font-size: 12pt; }
                       </style>
                    </head>
-                   <body style="padding:5px">
+                   <body style="padding:5px;font-family:'Lucida Sans Unicode', sans-serif">
                      <center><p style="text-indent: 0pt;">
                    
                       <img width="150" style="" height="90" src="https://onepercentdating.club/logo.png"/></p></center>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
-                      <p style="padding-top: 6pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Subject: Exclusive Access Granted: Welcome to One Percent Dating Club</p>
-                      <p style="text-indent: 0pt;text-align: left;"><br/></p>
+                      
                       <b style="padding-left: 5pt;text-indent: 0pt;text-align: left;">Dear ${user_name},</b>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
-                      <p class="s1" style="padding-left: 5pt;text-indent: 0pt;text-align: left;">Celebrating Your Arrival at One Percent Dating Club</p>
+                      <p class="s1" style="padding-left: 5pt;text-indent: 0pt;text-align: left;"><b>Celebrating Your Arrival at One Percent Dating Club</b></p>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
                       <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">We are thrilled to extend to you a warm welcome to the One Percent Dating Club community.</p>
                       <p style="padding-top: 4pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Following a thorough review of your profile, we are delighted to inform you that you have</p>
                       <p style="padding-top: 4pt;padding-left: 5pt;text-indent: 0pt;line-height: 136%;text-align: left;">been selected to join our exclusive circle of distinguished members. Congratulations, you are now part of a world where excellence and allure meet.</p>
-                      <p class="s1" style="padding-top: 10pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Discover the Essence of One Percent Dating Club</p>
+                      <br>
+                      <p class="s1" style="padding-top: 10pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><b>Discover the Essence of One Percent Dating Club</b></p>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
                       <p style="padding-left: 5pt;text-indent: 0pt;line-height: 133%;text-align: left;">At One Percent Dating Club, we pride ourselves on maintaining an environment that is both selective and diverse, uniting individuals who are not only intelligent and creative but also share a relentless drive for ambition. Our mission revolves around nurturing connections</p>
                       <p style="padding-left: 5pt;text-indent: 0pt;line-height: 136%;text-align: left;">among those who seek partners of equal calibre. Delve deeper into our mission [insert link to mission statement] to understand the core of our community.</p>
-                      <p class="s1" style="padding-top: 10pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Maximizing Your One Percent Dating Club Experience</p>
+                      <br>
+                      <p class="s1" style="padding-top: 10pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><b>Maximizing Your One Percent Dating Club Experience</b></p>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
                       <p style="padding-left: 5pt;text-indent: 0pt;line-height: 132%;text-align: justify;">The initial days within our community are pivotal. Our advanced algorithms are fine-tuning to your interactions - the prospects you find appealing and those who reciprocate your interest. To enhance this calibration, we encourage you to upload six high-resolution photographs that capture your essence and complete your profile with an engaging bio.</p>
-                      <p class="s1" style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Navigating Your Exclusive Journey</p>
+                      <br>
+                      <p class="s1" style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><b>Navigating Your Exclusive Journey</b></p>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
                       <p style="padding-left: 5pt;text-indent: 0pt;line-height: 130%;text-align: justify;">Envision a vibrant, happy hour singles scene, tailored just for you. Each day, at the designated happy hour, we present a curated selection of potential matches. The quantity ranges from 1-4, tailored to your preferences and profile specifics. Indicate your interest with a Heart, or</p>
                       <p style="padding-left: 5pt;text-indent: 0pt;line-height: 133%;text-align: left;">pass with an X. Mutual Hearts? Congratulations, a Match is made, opening the door to conversations filled with charm and wit. Patience is key, as our selective process means only a handful of prospects are showcased daily.</p>
-                      <p class="s1" style="padding-top: 10pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Your Voice Matters</p>
+                      <br>
+                      <p class="s1" style="padding-top: 10pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><b>Your Voice Matters</b></p>
                       <p style="text-indent: 0pt;text-align: left;"><br/></p>
                       <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">Your journey with us is not just about making connections; it&#39;s about shaping the future of</p>
                       <p style="padding-top: 4pt;padding-left: 5pt;text-indent: 0pt;line-height: 130%;text-align: left;">One Percent Dating Club. We value your insights and feedback immensely. Encounter a bug? Have a suggestion or an idea? Or simply wish to share your thoughts? Reach out to us at</p>
