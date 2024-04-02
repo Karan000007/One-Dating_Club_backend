@@ -199,7 +199,7 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                                                 var study_main_cat=sub_data[0].study_main_cat;
 
                                                 var sql = `INSERT INTO tbl_users (firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree,study_main_cat,study, institute, company_name,industry_main_cat,industry,designation, interests,
-                                                    gender_prefrences, age_prefrences_min,age_prefrences_max,educational_prefrences, bio, country_code, mobileno, email,ip,referralCode,used_referral,latitude,longitude,city,country,entry_date,status
+                                                    gender_prefrences, age_prefrences_min,age_prefrences_max,educational_prefrences, bio, country_code, mobileno, email,ip,referralCode,used_referral,latitude,longitude,city,country,entry_date
                                                         )
                                                         VALUES
                                                         (
@@ -208,7 +208,7 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                 
                                                         
                                                         db.query(sql, [firstname, lastname, gender, dob, height_feet, height_inch, linkedin, latest_degree, study_main_cat,study, institute, company_name,industry_main_cat,industry,designation, interests,
-                                                        gender_prefrences, age_prefrences_min,age_prefrences_max, educational_prefrences, bio, country_code, mobileno, email,ip,referral,used_referral,latitude,longitude,city,country,new Date(),1], function (err, data) {
+                                                        gender_prefrences, age_prefrences_min,age_prefrences_max, educational_prefrences, bio, country_code, mobileno, email,ip,referral,used_referral,latitude,longitude,city,country,new Date()], function (err, data) {
                                                         
                                                             if (err) {
                                                             console.log(err)
@@ -268,7 +268,7 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                                                                 var mailOptions = {
                                                                     from: rows[0].from_detail,
                                                                     to: email,
-                                                                    subject: `Welcome to the One Percent Dating Club - A World of Exclusive Connections Awaits`,
+                                                                    subject: `Welcome to the One% Dating Club - A World of Exclusive Connections Awaits`,
                                                                     html: `<!DOCTYPE  html5>
                                                                     <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
                                                                     <head>
@@ -287,25 +287,23 @@ router.post("/register", upload.array('images',10), async (req, res, next) => {
                                                                         <p><b style="padding-left: 5pt;text-indent: 0pt;text-align: left;">Dear ${firstname},</b></p>
                                                                         <br>
                                                                         <p class="s1" style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><b>A Heartfelt Thank You for Your Interest</b></p>
-                                                                        <p style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">We are delighted to welcome you to the One Percent Dating Club - an enclave where</p>
-                                                                        <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">brilliance, creativity, and ambition converge. Your support in our mission is invaluable. Our ethos is rooted in exclusivity and selectivity, creating a melting pot of intelligent, innovative, and driven individuals from a kaleidoscope of backgrounds. This is achieved through a blend of sophisticated in-app matching and curated offline group activities.</p>
+                                                                        <p style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">We are delighted to welcome you to the One% Dating Club - an enclave where brilliance, creativity, and ambition converge. Your support in our mission is invaluable. Our ethos is rooted in exclusivity and selectivity, creating a melting pot of intelligent, innovative, and driven individuals from a kaleidoscope of backgrounds. This is achieved through a blend of sophisticated in-app matching and curated offline group activities.</p>
                                                                         <br>
                                                                         <p class="s1" style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><b>Your Current Membership Status: Exclusive Waitlist</b></p>
-                                                                        <p style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">In our quest to maintain equilibrium, diversity, and a high-caliber community, your</p>
-                                                                        <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">application has been carefully placed on our exclusive waitlist. This is a testament to our commitment to balanced ratios, varied member backgrounds, and a controlled admissions rate - all while fostering vibrant engagement within our community.</p>
+                                                                        <p style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">In our quest to maintain equilibrium, diversity, and a high-caliber community, your application has been carefully placed on our <b>exclusive waitlist.</b> This is a testament to our commitment to balanced ratios, varied member backgrounds, and a controlled admissions rate - all while fostering vibrant engagement within our community.</p>
                                                                         <br>
                                                                         <p class="s1" style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><b>The Art of Gaining Membership</b></p>
-                                                                        <p style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">How to ascend the waitlist? We meticulously analyze your LinkedIn profile, &#39;About Me&#39;</p>
-                                                                        <p style="padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">section, and photo submissions. Our algorithm is fine-tuned to consider your educational</p>
-                                                                        <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">background, professional achievements, industry involvement, fields of study, and personal interests. This, coupled with our human Review Team&#39;s discerning eye, ensures that every</p>
-                                                                        <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">profile is not only accomplished but also carries a certain a indescribable charm. Quality, taste, and a reflection of your best self are paramount in this journey.</p>
+                                                                        <p style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">How to ascend the waitlist? We meticulously analyze your LinkedIn profile, &#39;About Me&#39;
+                                                                        section, and photo submissions. Our algorithm is fine-tuned to consider your educational
+                                                                        background, professional achievements, industry involvement, fields of study, and personal interests. This, coupled with our human Review Team&#39;s discerning eye, ensures that every
+                                                                        profile is not only accomplished but also carries a certain a indescribable charm. Quality, taste, and a reflection of your best self are paramount in this journey.</p>
                                                                         <br>
                                                                         <p class="s1" style="padding-top: 11pt;padding-left: 5pt;text-indent: 0pt;text-align: left;"><b>Our Philosophy and Your Role</b></p>
-                                                                        <p style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">At the heart of the One Percent Dating Club is a philosophy that intertwines fun, wit, and a refreshingly humorous approach with the pulse of our members&#39; desires. We are here not just to enhance your dating experience but to enrich your social tapestry. Your voice is our guiding star - tell us what you envision, and let us sculpt an experience that transcends the ordinary.</p>
+                                                                        <p style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">At the heart of the One% Dating Club is a philosophy that intertwines fun, wit, and a refreshingly humorous approach with the pulse of our members&#39; desires. We are here not just to enhance your dating experience but to enrich your social tapestry. Your voice is our guiding star - tell us what you envision, and let us sculpt an experience that transcends the ordinary.</p>
                                                                         <p style="padding-top: 12pt;padding-left: 5pt;text-indent: 0pt;text-align: left;">Welcome to a realm where exclusivity is not just a word, but an experience.</p>
                                                                         <br><br>
                                                                         <b style="padding-top: 3pt;padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">Warm regards,</b>
-                                                                        <p style="padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">The One Percent Dating Club Team</p>
+                                                                        <p style="padding-left: 5pt;text-indent: 0pt;line-height: 18pt;text-align: left;">The One% Dating Club Team</p>
                                                                     </body>
                                                                     </html>`
                                                                 };
