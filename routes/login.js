@@ -170,7 +170,7 @@ router.post("/send_otp", async (req,res)=>{
                 body: "Welcome to the One% Dating Club, where exceptional connections await. Your personal OTP for entry is "+OTP+". Please enter this code within the next 5 minutes to confirm your identity and proceed to a world of exclusive dating experiences. We're thrilled to have you join our distinguished community.",
                 to: "+"+country_code+""+mobileno, // Text your number
                 from: '+13465531781', // From a valid Twilio number
-            });
+            })
 
 
             var sql="INSERT INTO tbl_otp (mobile_no,otp,entry_date) VALUES (?, ?, ?)";

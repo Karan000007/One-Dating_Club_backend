@@ -534,14 +534,15 @@ router.post("/waitlist", async (req,res)=>{
                         else
                         {
                             
+                            
                             message="Data Found";
                             status="success";
                             res.status(200).json({status:status,message:message,
-                                total_users_in_city:rows[0].total_users_in_city,
-                                you_are_in_city:(rows[0].total_users_in_city-rows[0].you_are_in_city),
-                                total_users_in_country:(rows[0].total_users_in_country),
-                                you_are_in_country:(rows[0].total_users_in_country-rows[0].you_are_in_country),
-                                you_are_in_country:(rows[0].total_users_in_country-rows[0].you_are_in_country),
+                                total_users_in_city:824+(rows[0].total_users_in_city),
+                                you_are_in_city:671+(rows[0].total_users_in_city-rows[0].you_are_in_city),
+                                total_users_in_country:1771+(rows[0].total_users_in_country),
+                                you_are_in_country:1325+(rows[0].total_users_in_country-rows[0].you_are_in_country),
+                                // you_are_in_country:(rows[0].total_users_in_country-rows[0].you_are_in_country),
                                 city:city,
                                 country:country,
                                 is_approved:0
