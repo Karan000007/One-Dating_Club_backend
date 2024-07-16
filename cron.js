@@ -105,11 +105,31 @@ function run()
 }
 
 
-async function matches_alg_run() 
-{
-    db.query("UPDATE tbl_users SET today_matches_show=0,today_matches_profile='' WHERE entry_date < NOW()");
-    sendNotification(message);
+// async function matches_alg_run() 
+// {
+//     db.query("UPDATE tbl_users SET today_matches_show=0,today_matches_profile='' WHERE entry_date < NOW()");
+//     sendNotification(message);
     
+// }
+async function matches_alg_run() {
+    db.query("UPDATE tbl_users SET today_matches_show=0, today_matches_profile='' WHERE entry_date < NOW()");
+
+    // Select only accepted users
+    var qry = "SELECT DISTINCT u.email, u.id FROM tbl_users u WHERE u.status=1 AND u.is_phase2=1";
+    db.query(qry, function (err, rows) {
+        if (err) {
+            console.log(err);
+        } else if (rows.length > 0) {
+            rows.forEach(row => {
+                var notificationMessage = {
+                    app_id: "5039ccac-714d-4484-8958-70df23464b8f",
+                    contents: { "en": "New matches await! Open One% Dating Club to discover who's ready to connect with you today." },
+                    include_player_ids: [row.id]  
+                };
+                // sendNotification(notificationMessage); //For pausing the notifs
+            });
+        }
+    });
 }
 
 let my_job=cron.schedule('* * * * *', () => {
